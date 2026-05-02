@@ -1,0 +1,83 @@
+name: Skill Submission (Audit Request)
+description: Request official auditing and listing for a published skill
+labels: ["skill-submission", "audit"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Anyone can publish a skill with `nullapt publish`. This form requests an **official audit** — a maintainer reviews your manifest and WASM binary and marks the skill as verified on the registry.
+
+        Audited skills display a ✓ badge on the marketplace and are eligible for the curated "Featured" list.
+
+  - type: input
+    id: name
+    attributes:
+      label: Skill name
+      placeholder: "web-search"
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version to audit
+      placeholder: "1.0.0"
+    validations:
+      required: true
+
+  - type: input
+    id: registry_url
+    attributes:
+      label: Registry listing URL
+      placeholder: "https://nullapt.dev/skills/web-search"
+    validations:
+      required: true
+
+  - type: input
+    id: source_url
+    attributes:
+      label: Source code URL
+      description: The skill must be open source for audit eligibility
+      placeholder: "https://github.com/alice/nullapt-web-search"
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What does this skill do?
+      description: A plain-English description of the tools it exposes and their use cases.
+    validations:
+      required: true
+
+  - type: textarea
+    id: permissions
+    attributes:
+      label: Justify the permissions
+      description: Explain why each declared permission (network domains, fs paths, env vars) is necessary.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: network
+    attributes:
+      label: Does the skill require network access?
+      options:
+        - "No"
+        - "Yes — domains listed in SKILL.json"
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Submission checklist
+      options:
+        - label: The skill is already published and installable via `nullapt get`
+          required: true
+        - label: The source code is publicly available and matches the published WASM
+          required: true
+        - label: The SKILL.json has no wildcard network domains
+          required: true
+        - label: I am the original author or have explicit permission from the author
+          required: true

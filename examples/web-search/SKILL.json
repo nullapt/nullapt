@@ -1,0 +1,48 @@
+{
+  "schema_version": "1.0",
+  "name": "web-search",
+  "version": "1.0.0",
+  "description": "Search the web using DuckDuckGo Instant Answers API",
+  "author": "nullapt-team",
+  "homepage": "https://nullapt.dev/skills/web-search",
+  "license": "MIT",
+  "permissions": {
+    "network": {
+      "allowed": true,
+      "domains": [
+        "api.duckduckgo.com"
+      ]
+    },
+    "filesystem": {
+      "read": [],
+      "write": []
+    },
+    "env": []
+  },
+  "entry": "skill.wasm",
+  "interface": {
+    "tools": [
+      {
+        "name": "web_search",
+        "description": "Search the web and return top results",
+        "input_schema": {
+          "properties": {
+            "query": {
+              "description": "The search query",
+              "type": "string"
+            }
+          },
+          "required": [
+            "query"
+          ],
+          "type": "object"
+        }
+      }
+    ]
+  },
+  "signature": {
+    "algorithm": "ed25519",
+    "public_key": "UQhB2auD6Es6Hitupog85fWtTQZ2PHSSMZNXXdW+UGo=",
+    "value": "2PAK+joS/eZEIBbiVq3sL1v9sa5+jS573QnD2tfZNmlxv6E1jDvUI+MhB70EVNpEwwLAtKKSwn5ywxj5T7FDAg=="
+  }
+}

@@ -1,0 +1,18 @@
+# Global fallback — all PRs require a maintainer review
+* @nullapt/maintainers
+
+# Cryptographic code — extra scrutiny required
+/internal/manifest/verify.go @nullapt/security
+/internal/manifest/skill.go  @nullapt/security
+
+# WASM sandbox — extra scrutiny required
+/internal/runtime/ @nullapt/security
+
+# Registry API
+/cmd/registry-api/ @nullapt/maintainers
+
+# Web marketplace
+/web/ @nullapt/maintainers
+
+# CI/CD — changes require two maintainer approvals
+/.github/workflows/ @nullapt/maintainers

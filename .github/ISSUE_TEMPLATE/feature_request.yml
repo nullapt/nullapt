@@ -1,0 +1,54 @@
+name: Feature Request
+description: Propose a new feature or improvement
+labels: ["enhancement", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before requesting a new feature, check if it's already tracked in [open issues](https://github.com/nullapt/nullapt/issues).
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      options:
+        - CLI (nullapt)
+        - Registry API
+        - Web Marketplace
+        - SKILL.json / manifest format
+        - Signature / cryptography
+        - WASM sandbox
+        - MCP bridge
+        - Developer tooling
+        - Documentation
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or motivation
+      description: What problem does this feature solve? Who is it for?
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: What would you like to see? Include CLI flags, API shapes, or UI changes if relevant.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: What other approaches did you consider? Why do you prefer your proposal?
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional context
+      description: Links, prior art, related issues, or anything else that helps.

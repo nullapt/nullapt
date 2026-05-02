@@ -1,0 +1,22 @@
+{
+  "name": "NullApt — AI Skill Registry",
+  "short_name": "~/nullapt",
+  "description": "The private-first package manager for AI skills",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0c0c0d",
+  "theme_color": "#4ade80",
+  "icons": [
+    {
+      "src": "/icon2",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon3",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
