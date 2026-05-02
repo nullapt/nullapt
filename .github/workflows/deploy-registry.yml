@@ -26,22 +26,15 @@ jobs:
           go-version-file: go.mod
           cache: true
 
-      - name: Build binary
-        run: |
-          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
-            go build -ldflags="-s -w" -o registry-api ./cmd/registry-api
-
       - name: Apply database migrations
-        run: |
-          psql ${{ secrets.DATABASE_URL }} -f internal/db/schema.sql
+        run: psql ${{ secrets.DATABASE_URL }} -f internal/db/schema.sql
         env:
           PGPASSWORD: ${{ secrets.DB_PASSWORD }}
 
-      # Swap this step for your preferred deployment target:
-      # Railway, Fly.io, Cloud Run, a plain VPS with rsync, etc.
-      - name: Deploy to Fly.io
-        uses: superfly/flyctl-actions/setup-flyctl@master
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
 
-      - run: flyctl deploy --remote-only
+      - name: Deploy to Railway
+        run: railway up --service registry-api --detach
         env:
-          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
