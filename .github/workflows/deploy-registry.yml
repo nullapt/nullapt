@@ -26,10 +26,11 @@ jobs:
           go-version-file: go.mod
           cache: true
 
+      - name: Install psql client
+        run: sudo apt-get install -y postgresql-client
+
       - name: Apply database migrations
-        run: psql ${{ secrets.DATABASE_URL }} -f internal/db/schema.sql
-        env:
-          PGPASSWORD: ${{ secrets.DB_PASSWORD }}
+        run: psql "${{ secrets.DATABASE_URL }}" -f internal/db/schema.sql
 
       - name: Install Railway CLI
         run: npm install -g @railway/cli
