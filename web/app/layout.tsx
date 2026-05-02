@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://nullapt.dev";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://nullapt.dev";
 const SITE_NAME = "NullApt";
 const SITE_DESCRIPTION =
   "The private-first package manager for AI skills. Cryptographically signed, WASM sandboxed, and offline first.";
