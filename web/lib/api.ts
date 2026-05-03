@@ -1,6 +1,6 @@
 import { cacheTag } from "next/cache";
 
-const REGISTRY_URL = process.env.NEXT_PUBLIC_REGISTRY_URL ?? "https://registry.nullapt.dev";
+const REGISTRY_URL = process.env.NEXT_PUBLIC_REGISTRY_URL || "https://registry.nullapt.dev";
 
 export const SKILLS_TAG = "skills";
 export const skillTag = (name: string) => `skill:${name}`;
