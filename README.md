@@ -42,7 +42,6 @@ nullapt get web-search
 - [Why NullApt](#why-nullapt)
 - [Installation](#installation)
   - [macOS / Linux](#macos--linux)
-  - [Homebrew](#homebrew)
   - [Go](#go)
   - [Windows](#windows)
 - [Quick Start](#quick-start)
@@ -87,12 +86,6 @@ A skill that doesn't declare `network.allowed: true` **cannot make HTTP requests
 curl -fsSL https://nullapt.dev/install.sh | sh
 ```
 
-### Homebrew
-
-```bash
-brew install nullapt/tap/nullapt
-```
-
 ### Go
 
 ```bash
@@ -101,7 +94,9 @@ go install github.com/nullapt/nullapt/cmd/nullapt@latest
 
 ### Windows
 
-Download the latest `.exe` from the [releases page](https://github.com/nullapt/nullapt/releases).
+Download the latest `.zip` from the [releases page](https://github.com/nullapt/nullapt/releases) and extract `nullapt.exe` somewhere on your PATH.
+
+> **Homebrew** support is planned — track progress in [issue #1](https://github.com/nullapt/nullapt/issues).
 
 ---
 

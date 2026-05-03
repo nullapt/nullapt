@@ -110,9 +110,6 @@ export default function DocsPage() {
           </p>
           <Code>$ curl -fsSL https://nullapt.dev/install.sh | sh</Code>
 
-          <p style={{ color: "var(--muted)" }} className="text-sm mb-2 mt-6">Homebrew</p>
-          <Code>$ brew install nullapt/tap/nullapt</Code>
-
           <p style={{ color: "var(--muted)" }} className="text-sm mb-2 mt-6">Go (requires Go 1.23+)</p>
           <Code>$ go install github.com/nullapt/nullapt/cmd/nullapt@latest</Code>
 
