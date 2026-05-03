@@ -44,6 +44,22 @@ archives:
 checksum:
   name_template: "checksums.txt"
 
+brews:
+  - name: nullapt
+    repository:
+      owner: nullapt
+      name: homebrew-tap
+      branch: main
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+    directory: Formula
+    homepage: https://nullapt.dev
+    description: "The private-first package manager for AI skills"
+    license: MIT
+    test: |
+      system "#{bin}/nullapt --version"
+    install: |
+      bin.install "nullapt"
+
 changelog:
   sort: asc
   use: github
