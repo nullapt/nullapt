@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"net/url"
 	"time"
 )
 
@@ -41,12 +40,13 @@ type UploadResult struct {
 // Upload stores data at the given path inside the Blob store and returns the
 // result. The path becomes the public URL suffix, e.g. "skills/foo/1.0.0/skill.wasm".
 func (c *Client) Upload(ctx context.Context, path string, data []byte) (*UploadResult, error) {
-	endpoint := fmt.Sprintf("%s/%s?token=%s", apiBase, url.PathEscape(path), url.QueryEscape(c.token))
+	endpoint := fmt.Sprintf("%s/%s", apiBase, path)
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPut, endpoint, bytes.NewReader(data))
 	if err != nil {
 		return nil, err
 	}
+	req.Header.Set("Authorization", "Bearer "+c.token)
 	req.Header.Set("Content-Type", "application/wasm")
 	req.Header.Set("X-Api-Version", "7")
 	req.ContentLength = int64(len(data))
@@ -72,12 +72,13 @@ func (c *Client) Upload(ctx context.Context, path string, data []byte) (*UploadR
 // UploadStream is the streaming variant for large WASM binaries without
 // buffering the entire body in memory first.
 func (c *Client) UploadStream(ctx context.Context, path string, r io.Reader, size int64) (*UploadResult, error) {
-	endpoint := fmt.Sprintf("%s/%s?token=%s", apiBase, url.PathEscape(path), url.QueryEscape(c.token))
+	endpoint := fmt.Sprintf("%s/%s", apiBase, path)
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPut, endpoint, r)
 	if err != nil {
 		return nil, err
 	}
+	req.Header.Set("Authorization", "Bearer "+c.token)
 	req.Header.Set("Content-Type", "application/wasm")
 	req.Header.Set("X-Api-Version", "7")
 	req.ContentLength = size
