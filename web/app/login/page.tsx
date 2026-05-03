@@ -11,15 +11,21 @@ export const metadata: Metadata = {
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://nullapt.dev";
 const GITHUB_CLIENT_ID = process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID || "";
 
+const ERROR_MESSAGES: Record<string, string> = {
+  oauth_exchange_failed: "GitHub sign-in failed. Please try again.",
+  missing_code: "GitHub did not return an authorization code. Please try again.",
+  redirect_uri_mismatch: "OAuth redirect URI mismatch — check your GitHub OAuth app settings.",
+};
+
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ next?: string }>;
+  searchParams: Promise<{ next?: string; error?: string }>;
 }) {
   const user = await getCurrentUser();
   if (user) redirect("/settings/tokens");
 
-  const { next } = await searchParams;
+  const { next, error } = await searchParams;
   const state = encodeURIComponent(next ?? "/settings/tokens");
   const redirectURI = encodeURIComponent(`${SITE_URL}/auth/callback`);
   const ghAuthURL = GITHUB_CLIENT_ID
@@ -39,6 +45,15 @@ export default async function LoginPage({
         NullApt uses GitHub to verify your identity. Your GitHub username becomes your publishing
         handle and is recorded in the transparency log.
       </p>
+
+      {error && (
+        <div
+          style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--warning)" }}
+          className="rounded p-4 text-sm mb-6"
+        >
+          {ERROR_MESSAGES[error] ?? `Sign-in error: ${error}`}
+        </div>
+      )}
 
       {ghAuthURL ? (
         <a

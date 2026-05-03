@@ -29,6 +29,11 @@ export async function GET(req: NextRequest) {
 
   const data = (await res.json()) as { session_token: string };
 
+  if (!data.session_token) {
+    console.error("OAuth callback: backend returned no session_token");
+    return NextResponse.redirect(new URL(`/login?error=oauth_exchange_failed`, url));
+  }
+
   // Validate the redirect target — must be a relative path on this site
   const safeNext = state.startsWith("/") && !state.startsWith("//") ? state : "/settings/tokens";
   const redirectURL = new URL(safeNext, url);
