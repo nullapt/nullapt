@@ -27,6 +27,11 @@ export default async function HomePage({
   const { q } = await searchParams;
   const [skills, stars] = await Promise.all([fetchSkills(q), fetchStars()]);
 
+  // Trending = top 5 by downloads when not actively searching
+  const trending = !q
+    ? [...skills].sort((a, b) => b.downloads - a.downloads).slice(0, 5)
+    : [];
+
   return (
     <div className="max-w-6xl mx-auto px-6 py-12">
       {/* Hero */}
@@ -132,6 +137,67 @@ export default async function HomePage({
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Trending skills */}
+      {trending.length > 0 && !q && (
+        <div className="mt-14">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xs font-semibold" style={{ color: "var(--muted)" }}>
+              TRENDING SKILLS
+            </h2>
+            <Link href="/skills" style={{ color: "var(--accent)" }} className="text-xs hover:underline">
+              browse all →
+            </Link>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {trending.map((skill, rank) => {
+              const maxDownloads = trending[0].downloads || 1;
+              const pct = Math.max((skill.downloads / maxDownloads) * 100, skill.downloads > 0 ? 4 : 0);
+              return (
+                <Link
+                  key={skill.name}
+                  href={`/skills/${skill.name}`}
+                  style={{ border: "1px solid var(--border)", background: "var(--surface)" }}
+                  className="rounded p-4 hover:border-green-500 transition-colors flex flex-col gap-2"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <span style={{ color: "var(--accent)" }} className="font-semibold text-sm">
+                        {skill.name}
+                      </span>
+                      <span style={{ color: "var(--muted)" }} className="text-xs ml-2">
+                        v{skill.version}
+                      </span>
+                    </div>
+                    <span
+                      style={{ color: "var(--muted)", background: "var(--border)", fontSize: "10px" }}
+                      className="px-1.5 py-0.5 rounded shrink-0"
+                    >
+                      #{rank + 1}
+                    </span>
+                  </div>
+                  <p className="text-xs line-clamp-1" style={{ color: "var(--muted)" }}>
+                    {skill.description}
+                  </p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <div
+                      style={{ background: "var(--border)", flex: 1 }}
+                      className="rounded-full h-1 overflow-hidden"
+                    >
+                      <div
+                        style={{ width: `${pct}%`, background: "#4ade80", height: "100%", borderRadius: "9999px" }}
+                      />
+                    </div>
+                    <span className="text-xs shrink-0" style={{ color: "var(--muted)" }}>
+                      {skill.downloads.toLocaleString()} dl
+                    </span>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
         </div>
       )}
 
