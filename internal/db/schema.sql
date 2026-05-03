@@ -77,6 +77,19 @@ CREATE TABLE IF NOT EXISTS transparency_log (
     recorded_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- CLI device-flow auth requests.
+-- The CLI calls /v1/auth/cli/init to create one, then polls /v1/auth/cli/poll
+-- until the user approves on the web. The raw token is cleared after first read.
+CREATE TABLE IF NOT EXISTS cli_auth_requests (
+    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    raw_token   TEXT,                                    -- set on approval, cleared after poll
+    user_id     UUID REFERENCES users(id) ON DELETE CASCADE,
+    status      TEXT NOT NULL DEFAULT 'pending',         -- pending | approved | expired
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    expires_at  TIMESTAMPTZ NOT NULL DEFAULT NOW() + INTERVAL '15 minutes'
+);
+CREATE INDEX IF NOT EXISTS idx_cli_auth_requests_expires ON cli_auth_requests(expires_at);
+
 -- ─── Indexes ─────────────────────────────────────────────────────────────────
 
 CREATE INDEX IF NOT EXISTS idx_skill_versions_skill_id ON skill_versions(skill_id);

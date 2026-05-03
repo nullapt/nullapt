@@ -147,3 +147,71 @@ func (p *Pool) RevokeAPIToken(ctx context.Context, userID, tokenID string) error
 	}
 	return nil
 }
+
+// ── CLI Device-Flow Auth ─────────────────────────────────────────────────────
+
+// CLIAuthStatus represents the state of a CLI auth request.
+type CLIAuthStatus string
+
+const (
+	CLIAuthPending  CLIAuthStatus = "pending"
+	CLIAuthApproved CLIAuthStatus = "approved"
+	CLIAuthExpired  CLIAuthStatus = "expired"
+)
+
+// CreateCLIAuthRequest creates a new pending CLI auth request. Returns the request id.
+func (p *Pool) CreateCLIAuthRequest(ctx context.Context) (string, error) {
+	var id string
+	err := p.QueryRow(ctx, `INSERT INTO cli_auth_requests DEFAULT VALUES RETURNING id`).Scan(&id)
+	if err != nil {
+		return "", fmt.Errorf("creating cli auth request: %w", err)
+	}
+	return id, nil
+}
+
+// ApproveCLIAuthRequest creates an API token for the user and attaches it to the request.
+// Returns an error if the request is already approved, expired, or not found.
+func (p *Pool) ApproveCLIAuthRequest(ctx context.Context, requestID, userID, rawToken string) error {
+	hash := sha256.Sum256([]byte(rawToken))
+	tokenHash := fmt.Sprintf("%x", hash)
+
+	// Store the hashed token in api_tokens and the raw token temporarily in the request.
+	_, err := p.Exec(ctx, `
+		WITH tok AS (
+			INSERT INTO api_tokens (user_id, name, token_hash)
+			VALUES ($1, 'CLI (device login)', $2)
+		)
+		UPDATE cli_auth_requests
+		SET status = 'approved', raw_token = $3, user_id = $1
+		WHERE id = $4
+		  AND status = 'pending'
+		  AND expires_at > NOW()
+	`, userID, tokenHash, rawToken, requestID)
+	return err
+}
+
+// PollCLIAuthRequest returns the current status. If approved, returns the raw token
+// and clears it from the DB (one-time read). Returns CLIAuthExpired if past expiry.
+func (p *Pool) PollCLIAuthRequest(ctx context.Context, requestID string) (CLIAuthStatus, string, error) {
+	var status CLIAuthStatus
+	var rawToken *string
+	var expiresAt time.Time
+
+	err := p.QueryRow(ctx, `
+		SELECT status, raw_token, expires_at FROM cli_auth_requests WHERE id = $1
+	`, requestID).Scan(&status, &rawToken, &expiresAt)
+	if err != nil {
+		return "", "", err
+	}
+
+	if status == CLIAuthPending && time.Now().After(expiresAt) {
+		return CLIAuthExpired, "", nil
+	}
+	if status != CLIAuthApproved || rawToken == nil {
+		return status, "", nil
+	}
+
+	// Clear raw token after first read.
+	_, _ = p.Exec(ctx, `UPDATE cli_auth_requests SET raw_token = NULL WHERE id = $1`, requestID)
+	return CLIAuthApproved, *rawToken, nil
+}

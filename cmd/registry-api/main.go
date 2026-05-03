@@ -51,6 +51,7 @@ func main() {
 	skills := handlers.NewSkillsHandler(pool, blobClient)
 	tokens := handlers.NewTokensHandler(pool)
 	gh := handlers.NewGitHubOAuthHandler(pool)
+	cli := handlers.NewCLIAuthHandler(pool)
 	authMw := handlers.AuthMiddleware(pool)
 	optionalAuth := handlers.OptionalAuth(pool)
 
@@ -66,6 +67,11 @@ func main() {
 		r.Post("/auth/github/callback", gh.Callback)
 		r.Delete("/auth/logout", handlers.Logout(pool))
 		r.With(authMw).Get("/me", handlers.Me(pool))
+
+		// CLI device-flow login
+		r.Post("/auth/cli/init", cli.Init)
+		r.Get("/auth/cli/poll", cli.Poll)
+		r.With(authMw).Post("/auth/cli/approve", cli.Approve)
 
 		// API tokens (CLI publishing)
 		r.With(authMw).Post("/tokens", tokens.Create)
