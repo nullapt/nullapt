@@ -123,6 +123,8 @@ func (s *Store) Get(name string) (*manifest.Skill, error) {
 }
 
 // List returns all installed skill manifests.
+// List returns every installed skill, walking both flat and namespaced
+// install paths (~/.nullapt/skills/foo and ~/.nullapt/skills/<org>/<name>).
 func (s *Store) List() ([]*manifest.Skill, error) {
 	entries, err := os.ReadDir(s.root)
 	if err != nil {
@@ -133,11 +135,25 @@ func (s *Store) List() ([]*manifest.Skill, error) {
 		if !e.IsDir() {
 			continue
 		}
-		skill, err := s.Get(e.Name())
-		if err != nil {
-			continue // tolerate corrupt entries; don't fail the whole list
+		// Flat install: ~/.nullapt/skills/<name>/SKILL.json
+		if skill, err := s.Get(e.Name()); err == nil {
+			skills = append(skills, skill)
+			continue
 		}
-		skills = append(skills, skill)
+		// Namespaced install: ~/.nullapt/skills/<org>/<name>/SKILL.json
+		nsEntries, err := os.ReadDir(filepath.Join(s.root, e.Name()))
+		if err != nil {
+			continue
+		}
+		for _, nsE := range nsEntries {
+			if !nsE.IsDir() {
+				continue
+			}
+			fullName := e.Name() + "/" + nsE.Name()
+			if skill, err := s.Get(fullName); err == nil {
+				skills = append(skills, skill)
+			}
+		}
 	}
 	return skills, nil
 }
