@@ -134,7 +134,7 @@ func (h *SkillsHandler) Publish(w http.ResponseWriter, r *http.Request) {
 		orgID, err := h.db.GetOrgByLogin(r.Context(), orgLogin)
 		if err != nil {
 			if errors.Is(err, pgx.ErrNoRows) {
-				writeError(w, http.StatusForbidden, fmt.Sprintf("org %q not recognized — no member has logged in yet, or the org doesn't exist on GitHub", orgLogin))
+				writeError(w, http.StatusForbidden, fmt.Sprintf("org %q is not connected — visit https://nullapt.dev/settings/organizations to connect it, then publish again", orgLogin))
 			} else {
 				writeError(w, http.StatusInternalServerError, "looking up org: "+err.Error())
 			}
@@ -146,7 +146,7 @@ func (h *SkillsHandler) Publish(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if !isMember {
-			writeError(w, http.StatusForbidden, fmt.Sprintf("you are not a public member of org %q — make your membership public on GitHub and re-login", orgLogin))
+			writeError(w, http.StatusForbidden, fmt.Sprintf("you are not a public member of %q — set your membership to Public on GitHub, then re-sync at https://nullapt.dev/settings/organizations", orgLogin))
 			return
 		}
 		ownerOrgID = orgID

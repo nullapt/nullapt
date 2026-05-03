@@ -1,10 +1,10 @@
 {
   "schema_version": "1.0",
-  "name": "web-search",
-  "version": "1.0.0",
-  "description": "Search the web using DuckDuckGo Instant Answers API",
-  "author": "nullapt-team",
-  "homepage": "https://nullapt.dev/skills/web-search",
+  "name": "nullapt/web-search",
+  "version": "0.1.0",
+  "description": "Search the web via DuckDuckGo's Instant Answer API. Returns the abstract plus related-topic links. Network access is restricted to api.duckduckgo.com only.",
+  "author": "nullapt",
+  "homepage": "https://nullapt.dev/skills/nullapt/web-search",
   "license": "MIT",
   "permissions": {
     "network": {
@@ -24,11 +24,17 @@
     "tools": [
       {
         "name": "web_search",
-        "description": "Search the web and return top results",
+        "description": "Search DuckDuckGo and return the abstract plus a short list of related-topic results.",
         "input_schema": {
           "properties": {
+            "limit": {
+              "description": "Maximum number of related-topic results to return. Default 5.",
+              "maximum": 20,
+              "minimum": 1,
+              "type": "integer"
+            },
             "query": {
-              "description": "The search query",
+              "description": "The search query.",
               "type": "string"
             }
           },
@@ -42,7 +48,7 @@
   },
   "signature": {
     "algorithm": "ed25519",
-    "public_key": "UQhB2auD6Es6Hitupog85fWtTQZ2PHSSMZNXXdW+UGo=",
-    "value": "2PAK+joS/eZEIBbiVq3sL1v9sa5+jS573QnD2tfZNmlxv6E1jDvUI+MhB70EVNpEwwLAtKKSwn5ywxj5T7FDAg=="
+    "public_key": "hJGagg8dyUYEGwLDeOGg+3tl+rdxgO7mllWCX6tqwsI=",
+    "value": "GOs1YBQ6FPRWCgSj+SvPhZkBCZKH+fO3RNK4w+nXtsPprTjxsr8p3v61wFGo/PR0Ffa9ooCynczvqf8a8EcxBw=="
   }
 }

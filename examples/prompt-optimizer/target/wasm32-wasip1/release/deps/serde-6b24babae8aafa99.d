@@ -1,0 +1,14 @@
+/Users/user/Dev/nullApt/examples/prompt-optimizer/target/wasm32-wasip1/release/deps/serde-6b24babae8aafa99.d: /Users/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs /Users/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs /Users/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs /Users/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs /Users/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs /Users/user/Dev/nullApt/examples/prompt-optimizer/target/wasm32-wasip1/release/build/serde-f4c2423ff4e7b2ff/out/private.rs
+
+/Users/user/Dev/nullApt/examples/prompt-optimizer/target/wasm32-wasip1/release/deps/libserde-6b24babae8aafa99.rlib: /Users/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs /Users/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs /Users/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs /Users/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs /Users/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs /Users/user/Dev/nullApt/examples/prompt-optimizer/target/wasm32-wasip1/release/build/serde-f4c2423ff4e7b2ff/out/private.rs
+
+/Users/user/Dev/nullApt/examples/prompt-optimizer/target/wasm32-wasip1/release/deps/libserde-6b24babae8aafa99.rmeta: /Users/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs /Users/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs /Users/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs /Users/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs /Users/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs /Users/user/Dev/nullApt/examples/prompt-optimizer/target/wasm32-wasip1/release/build/serde-f4c2423ff4e7b2ff/out/private.rs
+
+/Users/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs:
+/Users/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs:
+/Users/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs:
+/Users/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs:
+/Users/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs:
+/Users/user/Dev/nullApt/examples/prompt-optimizer/target/wasm32-wasip1/release/build/serde-f4c2423ff4e7b2ff/out/private.rs:
+
+# env-dep:OUT_DIR=/Users/user/Dev/nullApt/examples/prompt-optimizer/target/wasm32-wasip1/release/build/serde-f4c2423ff4e7b2ff/out
