@@ -1,4 +1,9 @@
+import { cacheTag } from "next/cache";
+
 const REGISTRY_URL = process.env.NEXT_PUBLIC_REGISTRY_URL ?? "https://registry.nullapt.dev";
+
+export const SKILLS_TAG = "skills";
+export const skillTag = (name: string) => `skill:${name}`;
 
 export interface SkillMeta {
   name: string;
@@ -46,11 +51,20 @@ async function get<T>(path: string): Promise<T> {
   return res.json() as Promise<T>;
 }
 
-export const listSkills = (q = "") =>
-  get<SkillMeta[]>(`/v1/skills${q ? `?q=${encodeURIComponent(q)}` : ""}`);
+export async function listSkills(q = ""): Promise<SkillMeta[]> {
+  "use cache";
+  cacheTag(SKILLS_TAG);
+  return get<SkillMeta[]>(`/v1/skills${q ? `?q=${encodeURIComponent(q)}` : ""}`);
+}
 
-export const getSkill = (name: string, version?: string) =>
-  get<SkillMeta>(`/v1/skills/${name}${version ? `@${version}` : ""}`);
+export async function getSkill(name: string, version?: string): Promise<SkillMeta> {
+  "use cache";
+  cacheTag(SKILLS_TAG, skillTag(name));
+  return get<SkillMeta>(`/v1/skills/${name}${version ? `@${version}` : ""}`);
+}
 
-export const getTransparencyLog = (name: string) =>
-  get<TransparencyEntry[]>(`/v1/skills/${name}/log`);
+export async function getTransparencyLog(name: string): Promise<TransparencyEntry[]> {
+  "use cache";
+  cacheTag(SKILLS_TAG, skillTag(name));
+  return get<TransparencyEntry[]>(`/v1/skills/${name}/log`);
+}

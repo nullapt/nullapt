@@ -16,6 +16,7 @@ export async function generateMetadata({
     const skill = await getSkill(name);
     const title = `${skill.name} — NullApt`;
     const description = `${skill.description} · by ${skill.author} · v${skill.version} · ${skill.downloads.toLocaleString()} downloads`;
+    const ogImage = `${SITE_URL}/api/og?name=${encodeURIComponent(name)}`;
     return {
       title,
       description,
@@ -24,8 +25,9 @@ export async function generateMetadata({
         description,
         url: `${SITE_URL}/skills/${name}`,
         type: "website",
+        images: [{ url: ogImage, width: 1200, height: 630, alt: skill.name }],
       },
-      twitter: { card: "summary", title, description },
+      twitter: { card: "summary_large_image", title, description, images: [ogImage] },
       alternates: { canonical: `${SITE_URL}/skills/${name}` },
     };
   } catch {
