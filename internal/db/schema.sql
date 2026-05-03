@@ -40,14 +40,40 @@ CREATE TABLE IF NOT EXISTS sessions (
 CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id);
 CREATE INDEX IF NOT EXISTS idx_sessions_expires_at ON sessions(expires_at);
 
+-- ─── Organizations ───────────────────────────────────────────────────────────
+-- Mirrors GitHub orgs the user is a public member of. Membership is synced
+-- from GitHub on every login (replace-all per user) so revocations on GitHub
+-- propagate within one session refresh.
+
+CREATE TABLE IF NOT EXISTS organizations (
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    github_org_id   BIGINT UNIQUE NOT NULL,
+    login           TEXT UNIQUE NOT NULL,           -- e.g. "nullapt"
+    display_name    TEXT,
+    avatar_url      TEXT,
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS organization_members (
+    org_id      UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    user_id     UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    synced_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    PRIMARY KEY (org_id, user_id)
+);
+CREATE INDEX IF NOT EXISTS idx_organization_members_user ON organization_members(user_id);
+
 -- ─── Skills ──────────────────────────────────────────────────────────────────
 
 CREATE TABLE IF NOT EXISTS skills (
-    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name        TEXT UNIQUE NOT NULL,
-    owner_id    UUID NOT NULL REFERENCES users(id),
-    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name         TEXT UNIQUE NOT NULL,
+    owner_id     UUID NOT NULL REFERENCES users(id),  -- the user who first published
+    owner_org_id UUID REFERENCES organizations(id),    -- non-null for org-namespaced skills
+    created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- Backfill column for existing deployments.
+ALTER TABLE skills ADD COLUMN IF NOT EXISTS owner_org_id UUID REFERENCES organizations(id);
 
 CREATE TABLE IF NOT EXISTS skill_versions (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),

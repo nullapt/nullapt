@@ -4,11 +4,14 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/jackc/pgx/v5"
 	"github.com/nullapt/nullapt/internal/blob"
 	"github.com/nullapt/nullapt/internal/db"
 	"github.com/nullapt/nullapt/internal/manifest"
@@ -123,6 +126,51 @@ func (h *SkillsHandler) Publish(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// ── 1b. Resolve namespace and ownership ──────────────────────────────────
+	// Names of the form "<org>/<skill>" are org-namespaced; the user must be
+	// a member of that org. Single-segment names belong to the publisher.
+	var ownerOrgID string
+	if orgLogin, _, ok := strings.Cut(skill.Name, "/"); ok {
+		orgID, err := h.db.GetOrgByLogin(r.Context(), orgLogin)
+		if err != nil {
+			if errors.Is(err, pgx.ErrNoRows) {
+				writeError(w, http.StatusForbidden, fmt.Sprintf("org %q not recognized — no member has logged in yet, or the org doesn't exist on GitHub", orgLogin))
+			} else {
+				writeError(w, http.StatusInternalServerError, "looking up org: "+err.Error())
+			}
+			return
+		}
+		isMember, err := h.db.IsOrgMember(r.Context(), userID, orgID)
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, "checking org membership: "+err.Error())
+			return
+		}
+		if !isMember {
+			writeError(w, http.StatusForbidden, fmt.Sprintf("you are not a public member of org %q — make your membership public on GitHub and re-login", orgLogin))
+			return
+		}
+		ownerOrgID = orgID
+	}
+
+	// 1c. If the skill already exists, enforce that the publisher still owns it.
+	existing, err := h.db.GetSkillOwnership(r.Context(), skill.Name)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "checking ownership: "+err.Error())
+		return
+	}
+	if existing != nil {
+		if existing.OwnerOrgID != "" {
+			isMember, err := h.db.IsOrgMember(r.Context(), userID, existing.OwnerOrgID)
+			if err != nil || !isMember {
+				writeError(w, http.StatusForbidden, "you are not a member of the org that owns this skill")
+				return
+			}
+		} else if existing.OwnerUserID != userID {
+			writeError(w, http.StatusForbidden, "this skill is owned by another user")
+			return
+		}
+	}
+
 	// ── 2. Upload WASM to Vercel Blob ─────────────────────────────────────────
 
 	wasmFile, wasmHeader, err := r.FormFile("wasm")
@@ -153,7 +201,7 @@ func (h *SkillsHandler) Publish(w http.ResponseWriter, r *http.Request) {
 	hash := sha256.Sum256(manifestData)
 	manifestHash := fmt.Sprintf("%x", hash)
 
-	if err := h.db.PublishSkill(r.Context(), userID, skill, blobResult.URL, manifestHash); err != nil {
+	if err := h.db.PublishSkill(r.Context(), userID, ownerOrgID, skill, blobResult.URL, manifestHash); err != nil {
 		writeError(w, http.StatusConflict, "publishing skill: "+err.Error())
 		return
 	}

@@ -49,6 +49,13 @@ type ghEmail struct {
 	Verified bool   `json:"verified"`
 }
 
+type ghOrg struct {
+	ID          int64  `json:"id"`
+	Login       string `json:"login"`
+	Description string `json:"description"`
+	AvatarURL   string `json:"avatar_url"`
+}
+
 // Callback exchanges a GitHub authorization code for a session.
 // POST /v1/auth/github/callback  body: { "code": "..." }
 // Response: { "session_token": "...", "user": { ... } }
@@ -105,6 +112,22 @@ func (h *GitHubOAuthHandler) Callback(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "saving user: "+err.Error())
 		return
+	}
+
+	// 4b. Sync org memberships (best-effort: don't fail login if GitHub blips).
+	// Only the user's PUBLIC org memberships are visible — that's a GitHub
+	// OAuth limitation, not ours. Members must set their org membership to
+	// "Public" on GitHub to publish under the org's namespace.
+	if orgs, err := h.fetchUserOrgs(ctx, accessToken); err == nil {
+		orgIDs := make([]string, 0, len(orgs))
+		for _, o := range orgs {
+			id, err := h.db.UpsertOrganization(ctx, o.ID, o.Login, o.Description, o.AvatarURL)
+			if err != nil {
+				continue
+			}
+			orgIDs = append(orgIDs, id)
+		}
+		_ = h.db.ReplaceUserOrgMemberships(ctx, userID, orgIDs)
 	}
 
 	// 5. Create a 30-day session
@@ -181,6 +204,26 @@ func (h *GitHubOAuthHandler) fetchUser(ctx context.Context, accessToken string) 
 		return nil, err
 	}
 	return &u, nil
+}
+
+func (h *GitHubOAuthHandler) fetchUserOrgs(ctx context.Context, accessToken string) ([]ghOrg, error) {
+	req, _ := http.NewRequestWithContext(ctx, http.MethodGet, "https://api.github.com/user/orgs?per_page=100", nil)
+	req.Header.Set("Authorization", "Bearer "+accessToken)
+	req.Header.Set("Accept", "application/vnd.github+json")
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != 200 {
+		return nil, fmt.Errorf("github orgs endpoint %d", resp.StatusCode)
+	}
+	var orgs []ghOrg
+	if err := json.NewDecoder(resp.Body).Decode(&orgs); err != nil {
+		return nil, err
+	}
+	return orgs, nil
 }
 
 func (h *GitHubOAuthHandler) fetchPrimaryEmail(ctx context.Context, accessToken string) (string, error) {

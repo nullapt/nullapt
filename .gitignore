@@ -22,6 +22,9 @@ web/.env
 web/.env.local
 web/.env.*.local
 
+# Claude Code local state
+.claude/
+
 # OS / editor
 .DS_Store
 *.pem
@@ -29,3 +32,4 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+.docs/

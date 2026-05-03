@@ -67,6 +67,7 @@ func main() {
 		r.Post("/auth/github/callback", gh.Callback)
 		r.Delete("/auth/logout", handlers.Logout(pool))
 		r.With(authMw).Get("/me", handlers.Me(pool))
+		r.With(authMw).Get("/me/orgs", handlers.MyOrgs(pool))
 
 		// CLI device-flow login
 		r.Post("/auth/cli/init", cli.Init)

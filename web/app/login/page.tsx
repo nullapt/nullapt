@@ -29,7 +29,7 @@ export default async function LoginPage({
   const state = encodeURIComponent(next ?? "/settings/tokens");
   const redirectURI = encodeURIComponent(`${SITE_URL}/auth/callback`);
   const ghAuthURL = GITHUB_CLIENT_ID
-    ? `https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&redirect_uri=${redirectURI}&scope=read:user%20user:email&state=${state}`
+    ? `https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&redirect_uri=${redirectURI}&scope=read:user%20user:email%20read:org&state=${state}`
     : null;
 
   return (

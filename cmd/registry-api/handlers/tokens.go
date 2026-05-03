@@ -142,6 +142,32 @@ func Me(pool *db.Pool) http.HandlerFunc {
 	}
 }
 
+// MyOrgs GET /v1/me/orgs — returns the orgs the current user can publish under.
+func MyOrgs(pool *db.Pool) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		userID, ok := r.Context().Value(contextKeyUserID).(string)
+		if !ok || userID == "" {
+			writeError(w, http.StatusUnauthorized, "authentication required")
+			return
+		}
+		orgs, err := pool.GetUserOrgs(r.Context(), userID)
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, "fetching orgs: "+err.Error())
+			return
+		}
+		out := make([]map[string]any, 0, len(orgs))
+		for _, o := range orgs {
+			out = append(out, map[string]any{
+				"id":         o.ID,
+				"login":      o.Login,
+				"name":       o.DisplayName,
+				"avatar_url": o.AvatarURL,
+			})
+		}
+		writeJSON(w, http.StatusOK, out)
+	}
+}
+
 // Logout DELETE /v1/auth/logout — invalidates the current session.
 // Looks for a session id in the Authorization header.
 func Logout(pool *db.Pool) http.HandlerFunc {

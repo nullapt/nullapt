@@ -93,7 +93,7 @@ func (p *Pool) GetSkill(ctx context.Context, name, version string) (*SkillRow, e
 }
 
 // PublishSkill inserts or updates a skill version and appends to the transparency log.
-func (p *Pool) PublishSkill(ctx context.Context, ownerID string, skill *manifest.Skill, wasmURL, manifestHash string) error {
+func (p *Pool) PublishSkill(ctx context.Context, ownerID, ownerOrgID string, skill *manifest.Skill, wasmURL, manifestHash string) error {
 	manifestJSON, err := json.Marshal(skill)
 	if err != nil {
 		return err
@@ -105,14 +105,19 @@ func (p *Pool) PublishSkill(ctx context.Context, ownerID string, skill *manifest
 	}
 	defer tx.Rollback(ctx) //nolint:errcheck
 
-	// Upsert skill record.
+	// Upsert skill record. Ownership is fixed at first publish; the handler
+	// has already verified the caller is allowed to publish new versions.
+	var orgArg interface{}
+	if ownerOrgID != "" {
+		orgArg = ownerOrgID
+	}
 	var skillID string
 	err = tx.QueryRow(ctx, `
-		INSERT INTO skills (name, owner_id)
-		VALUES ($1, $2)
+		INSERT INTO skills (name, owner_id, owner_org_id)
+		VALUES ($1, $2, $3)
 		ON CONFLICT (name) DO UPDATE SET owner_id = skills.owner_id
 		RETURNING id
-	`, skill.Name, ownerID).Scan(&skillID)
+	`, skill.Name, ownerID, orgArg).Scan(&skillID)
 	if err != nil {
 		return fmt.Errorf("upserting skill: %w", err)
 	}
