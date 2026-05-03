@@ -1,6 +1,8 @@
 module github.com/nullapt/nullapt
 
-go 1.23.2
+go 1.25.9
+
+toolchain go1.25.9
 
 require (
 	github.com/extism/go-sdk v1.6.1
