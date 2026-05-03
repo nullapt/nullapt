@@ -116,6 +116,9 @@ nullapt get nullapt/prompt-optimizer
 # List what's installed locally
 nullapt list
 
+# Run a tool directly inside its WASM sandbox
+nullapt run nullapt/prompt-optimizer optimize --input '{"prompt":"Could you please help"}'
+
 # Verify a local manifest's signature (before installing)
 nullapt verify ./my-skill/SKILL.json
 
@@ -125,7 +128,21 @@ nullapt remove nullapt/web-search
 
 Browse the full catalog at [nullapt.dev](https://nullapt.dev).
 
-Once installed, skills are MCP-discoverable at `~/.nullapt/skills/`. Point LM Studio or AnythingLLM at that directory and they appear automatically.
+### Using installed skills from an MCP client
+
+`nullapt mcp` is a stdio Model Context Protocol server that exposes every installed skill's tools to any MCP-compatible host (Claude Desktop, LM Studio, AnythingLLM, mcp-cli, …). Tool ids are `<skill>__<tool>` with `/` in skill names rewritten to `_`.
+
+For example, in Claude Desktop's `claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "nullapt": { "command": "nullapt", "args": ["mcp"] }
+  }
+}
+```
+
+Newly-installed skills appear without a restart — the server rescans `~/.nullapt/skills/` on every `tools/list` and `tools/call`.
 
 ---
 
@@ -201,6 +218,8 @@ Any permission not declared is denied at the WASM host level — not by policy, 
 nullapt get <skill[@version]>      Install a skill from the registry
 nullapt remove <skill>             Uninstall a skill
 nullapt list                       List installed skills
+nullapt run <skill> <tool>         Invoke a tool inside its WASM sandbox
+nullapt mcp                        Serve installed skills over stdio MCP
 nullapt verify <SKILL.json>        Verify a manifest's Ed25519 signature
 nullapt keygen                     Generate an Ed25519 signing keypair
 nullapt sign <SKILL.json>          Sign a manifest in-place with your private key
