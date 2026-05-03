@@ -1,7 +1,10 @@
 import { revalidateTag } from "next/cache";
 import { SKILLS_TAG, skillTag } from "@/lib/api";
+import { GITHUB_TAG } from "@/lib/github";
 
 const SECRET = process.env.REVALIDATE_SECRET;
+
+type Target = "skills" | "github";
 
 export async function POST(request: Request) {
   if (!SECRET) {
@@ -13,15 +16,22 @@ export async function POST(request: Request) {
     return Response.json({ error: "unauthorized" }, { status: 401 });
   }
 
-  let body: { skill?: string } = {};
+  let body: { target?: Target; skill?: string } = {};
   try {
     body = await request.json();
   } catch {
-    // Empty body is allowed — invalidate the list tag only.
+    // Empty body is allowed — defaults to invalidating the skills list tag.
   }
 
-  const tags = [SKILLS_TAG];
-  if (body.skill) tags.push(skillTag(body.skill));
+  const target: Target = body.target ?? "skills";
+  const tags: string[] = [];
+
+  if (target === "github") {
+    tags.push(GITHUB_TAG);
+  } else {
+    tags.push(SKILLS_TAG);
+    if (body.skill) tags.push(skillTag(body.skill));
+  }
 
   for (const tag of tags) {
     revalidateTag(tag, "max");

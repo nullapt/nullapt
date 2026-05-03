@@ -31,3 +31,13 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           HOMEBREW_TAP_GITHUB_TOKEN: ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN }}
+
+      - name: Revalidate nullapt.dev release page
+        if: ${{ env.REVALIDATE_SECRET != '' }}
+        env:
+          REVALIDATE_SECRET: ${{ secrets.REVALIDATE_SECRET }}
+        run: |
+          curl -fsS -X POST https://nullapt.dev/api/revalidate \
+            -H "x-revalidate-secret: $REVALIDATE_SECRET" \
+            -H "content-type: application/json" \
+            -d '{"target":"github"}'
