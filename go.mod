@@ -2,9 +2,11 @@ module github.com/nullapt/nullapt
 
 go 1.23.2
 
+toolchain go1.25.9
+
 require (
 	github.com/extism/go-sdk v1.6.1
-	github.com/go-chi/chi/v5 v5.2.1
+	github.com/go-chi/chi/v5 v5.2.2
 	github.com/jackc/pgx/v5 v5.7.5
 	github.com/spf13/cobra v1.10.2
 )
