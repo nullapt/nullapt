@@ -31,7 +31,7 @@ builds:
 
 archives:
   - id: nullapt
-    builds: [nullapt]
+    ids: [nullapt]
     name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
     format_overrides:
       - goos: windows
@@ -61,21 +61,6 @@ changelog:
       regexp: "^fix"
     - title: "Other"
       order: 999
-
-brews:
-  - name: nullapt
-    repository:
-      owner: nullapt
-      name: homebrew-tap
-      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
-    directory: Formula
-    homepage: https://nullapt.dev
-    description: "The private-first package manager for AI skills"
-    license: MIT
-    test: |
-      system "#{bin}/nullapt --version"
-    install: |
-      bin.install "nullapt"
 
 release:
   github:
