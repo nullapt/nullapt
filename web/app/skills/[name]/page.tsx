@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getSkill, getTransparencyLog, type TransparencyEntry } from "@/lib/api";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://nullapt.dev";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://nullapt.dev";
 
 export async function generateMetadata({
   params,

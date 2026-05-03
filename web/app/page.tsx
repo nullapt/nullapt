@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { listSkills, type SkillMeta } from "@/lib/api";
+import { getRepo } from "@/lib/github";
 
 async function fetchSkills(q?: string): Promise<SkillMeta[]> {
   try {
@@ -9,13 +10,22 @@ async function fetchSkills(q?: string): Promise<SkillMeta[]> {
   }
 }
 
+async function fetchStars(): Promise<number | null> {
+  try {
+    const repo = await getRepo();
+    return repo.stargazers_count;
+  } catch {
+    return null;
+  }
+}
+
 export default async function HomePage({
   searchParams,
 }: {
   searchParams: Promise<{ q?: string }>;
 }) {
   const { q } = await searchParams;
-  const skills = await fetchSkills(q);
+  const [skills, stars] = await Promise.all([fetchSkills(q), fetchStars()]);
 
   return (
     <div className="max-w-6xl mx-auto px-6 py-12">
@@ -126,7 +136,7 @@ export default async function HomePage({
       )}
 
       {/* Stats strip */}
-      <div className="mt-12 grid grid-cols-3 gap-4 text-center text-sm" style={{ color: "var(--muted)" }}>
+      <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-4 text-center text-sm" style={{ color: "var(--muted)" }}>
         {(
           [
             ["Ed25519 Signed", "every manifest verified"],
@@ -145,6 +155,20 @@ export default async function HomePage({
             <div className="text-xs">{sub}</div>
           </div>
         ))}
+        {stars !== null && (
+          <a
+            href="https://github.com/nullapt/nullapt"
+            target="_blank"
+            rel="noreferrer"
+            style={{ border: "1px solid var(--border)", background: "var(--surface)" }}
+            className="rounded p-4 hover:border-green-500 transition-colors"
+          >
+            <div style={{ color: "var(--accent)" }} className="font-semibold mb-1">
+              {stars.toLocaleString()} stars
+            </div>
+            <div className="text-xs">on GitHub</div>
+          </a>
+        )}
       </div>
     </div>
   );

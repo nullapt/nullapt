@@ -103,6 +103,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </a>
             <nav className="flex items-center gap-6 text-sm" style={{ color: "var(--muted)" }}>
               <a href="/skills" className="hover:text-white transition-colors">browse</a>
+              <a href="/releases" className="hover:text-white transition-colors">releases</a>
+              <a href="/docs" className="hover:text-white transition-colors">docs</a>
               <a
                 href="https://github.com/nullapt/nullapt"
                 target="_blank"
@@ -110,14 +112,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 className="hover:text-white transition-colors"
               >
                 github
-              </a>
-              <a
-                href="https://docs.nullapt.dev"
-                target="_blank"
-                rel="noreferrer"
-                className="hover:text-white transition-colors"
-              >
-                docs
               </a>
             </nav>
           </div>

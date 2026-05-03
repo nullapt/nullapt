@@ -14,8 +14,9 @@ func NewGetCmd() *cobra.Command {
 	var skipVerify bool
 
 	cmd := &cobra.Command{
-		Use:   "get <skill[@version]>",
-		Short: "Install a skill from the registry",
+		Use:     "get <skill[@version]>",
+		Aliases: []string{"i", "install"},
+		Short:   "Install a skill from the registry",
 		Long: `Download, verify, and install a skill from the NullApt registry.
 
 Every skill is verified against its Ed25519 signature before installation.
