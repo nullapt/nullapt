@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { safeJsonLd } from "@/lib/jsonld";
 import { getCurrentUser } from "@/lib/auth";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://nullapt.dev";
 const SITE_NAME = "NullApt";
@@ -63,16 +64,29 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#4ade80",
-  colorScheme: "dark",
+  themeColor: [
+    { media: "(prefers-color-scheme: dark)", color: "#4ade80" },
+    { media: "(prefers-color-scheme: light)", color: "#16a34a" },
+  ],
 };
+
+// Runs synchronously before paint to set data-theme from localStorage or
+// system preference. Prevents the flash of dark when a light user loads.
+const themeInitScript = `
+(function(){try{
+  var s=localStorage.getItem('nullapt-theme');
+  var t=s||(window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark');
+  document.documentElement.setAttribute('data-theme',t);
+}catch(e){document.documentElement.setAttribute('data-theme','dark');}})();
+`;
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const user = await getCurrentUser();
 
   return (
-    <html lang="en" className="h-full">
+    <html lang="en" className="h-full" suppressHydrationWarning>
       <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
         {/* JSON-LD: SoftwareApplication */}
         <script
           type="application/ld+json"
@@ -117,6 +131,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               >
                 github
               </a>
+              <ThemeToggle />
               {user ? (
                 <div className="flex items-center gap-3 pl-4" style={{ borderLeft: "1px solid var(--border)" }}>
                   <a

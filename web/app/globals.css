@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
-:root {
+:root,
+[data-theme="dark"] {
   --background: #0c0c0d;
   --surface: #111113;
   --border: #1e1e22;
@@ -10,6 +11,22 @@
   --accent-dim: #166534;
   --danger: #f87171;
   --warning: #fbbf24;
+  --text-hover: #ffffff;
+  color-scheme: dark;
+}
+
+[data-theme="light"] {
+  --background: #fafafa;
+  --surface: #ffffff;
+  --border: #e4e4e7;
+  --foreground: #18181b;
+  --muted: #52525b;
+  --accent: #16a34a;       /* deeper green for contrast on white */
+  --accent-dim: #bbf7d0;
+  --danger: #dc2626;
+  --warning: #d97706;
+  --text-hover: #000000;
+  color-scheme: light;
 }
 
 @theme inline {
@@ -39,3 +56,9 @@ body {
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: var(--background); }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* Re-route Tailwind's hover:text-white through the theme so it stays
+   readable in light mode without rewriting every component. */
+.hover\:text-white:hover {
+  color: var(--text-hover);
+}

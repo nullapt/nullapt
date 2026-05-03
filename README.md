@@ -28,7 +28,7 @@ NullApt is an open-source package manager for **AI skills** — WASM-compiled to
 
 ```bash
 # Install a skill
-nullapt get web-search
+nullapt get nullapt/web-search
 
 # The skill is immediately available to any MCP-compliant LLM client
 # on your machine — no restart required.
@@ -51,9 +51,10 @@ nullapt get web-search
 - [Command Reference](#command-reference)
   - [Flags](#flags)
 - [Building a Skill](#building-a-skill)
-  - [Rust (recommended)](#rust-recommended)
+  - [Rust (default)](#rust-default)
   - [Signing your manifest](#signing-your-manifest)
   - [Testing locally](#testing-locally)
+- [Publishing under an org namespace](#publishing-under-an-org-namespace)
 - [Architecture](#architecture)
 - [Publishing](#publishing)
 - [Self-Hosting the Registry](#self-hosting-the-registry)
@@ -108,21 +109,21 @@ Download the latest `.zip` from the [releases page](https://github.com/nullapt/n
 ## Quick Start
 
 ```bash
-# Browse the registry
-nullapt list
+# Install a published skill (namespaced or personal)
+nullapt get nullapt/web-search
+nullapt get nullapt/prompt-optimizer
 
-# Install a skill
-nullapt get web-search
-
-# Check what's installed
+# List what's installed locally
 nullapt list
 
 # Verify a local manifest's signature (before installing)
 nullapt verify ./my-skill/SKILL.json
 
 # Remove a skill
-nullapt remove web-search
+nullapt remove nullapt/web-search
 ```
+
+Browse the full catalog at [nullapt.dev](https://nullapt.dev).
 
 Once installed, skills are MCP-discoverable at `~/.nullapt/skills/`. Point LM Studio or AnythingLLM at that directory and they appear automatically.
 
@@ -135,7 +136,7 @@ Every skill ships with a `SKILL.json` manifest. This is the single source of tru
 ```json
 {
   "schema_version": "1.0",
-  "name": "web-search",
+  "name": "alice/web-search",
   "version": "1.2.0",
   "description": "Search the web using DuckDuckGo Instant Answers",
   "author": "alice",
@@ -201,10 +202,14 @@ nullapt get <skill[@version]>      Install a skill from the registry
 nullapt remove <skill>             Uninstall a skill
 nullapt list                       List installed skills
 nullapt verify <SKILL.json>        Verify a manifest's Ed25519 signature
-nullapt publish <SKILL.json>       Publish a skill to the registry
-nullapt login                      Authenticate with the registry
+nullapt keygen                     Generate an Ed25519 signing keypair
+nullapt sign <SKILL.json>          Sign a manifest in-place with your private key
+nullapt publish <SKILL.json>       Publish a signed skill to the registry
+nullapt login                      Authenticate with the registry (GitHub OAuth)
 nullapt logout                     Remove stored credentials
 ```
+
+Skill names follow `<scope>/<name>` (e.g. `nullapt/web-search`) for org-published skills, or just `<name>` (e.g. `my-thing`) for personal-namespace skills.
 
 ### Flags
 
@@ -218,15 +223,17 @@ nullapt publish --registry <url>   Publish to a custom registry
 
 ## Building a Skill
 
-Skills are WASM-WASI binaries that export named functions matching the tool names in `interface.tools`. You can write them in any language that compiles to WASM.
+Skills are WASM-WASI binaries that export named functions matching the tool names in `interface.tools`. Any language that compiles to `wasm32-wasip1` works — **Rust** (best DX, our default), **TinyGo**, **AssemblyScript**, **Zig**, **C/C++**.
 
-### Rust (recommended)
+Working starter projects live in [github.com/nullapt/examples](https://github.com/nullapt/examples).
+
+### Rust (default)
 
 ```bash
 cargo new --lib my-skill
 cd my-skill
-# Add extism-pdk to Cargo.toml
 cargo add extism-pdk
+rustup target add wasm32-wasip1   # one-time
 ```
 
 ```rust
@@ -234,25 +241,29 @@ cargo add extism-pdk
 use extism_pdk::*;
 
 #[plugin_fn]
-pub fn web_search(input: Json<SearchInput>) -> FnResult<Json<SearchOutput>> {
+pub fn my_tool(input: Json<MyInput>) -> FnResult<Json<MyOutput>> {
     // ... your logic
 }
 ```
 
 ```bash
-cargo build --target wasm32-wasi --release
-cp target/wasm32-wasi/release/my_skill.wasm skill.wasm
+cargo build --target wasm32-wasip1 --release
+cp target/wasm32-wasip1/release/my_skill.wasm skill.wasm
 ```
+
+> Note: `wasm32-wasip1` is the modern target name. The older `wasm32-wasi` target was renamed in Rust 1.78. If older docs say `wasm32-wasi`, use `wasm32-wasip1` instead.
 
 ### Signing your manifest
 
 ```bash
-# Generate a key pair
-nullapt keygen --output ./keys
+# Generate an Ed25519 keypair (writes to ~/.nullapt/keys/ by default).
+nullapt keygen
 
-# Sign your SKILL.json (embeds the signature in-place)
-nullapt sign ./SKILL.json --key ./keys/private.pem
+# Sign SKILL.json in-place with your private key.
+nullapt sign ./SKILL.json
 ```
+
+Both commands accept `--output` / `--key` to override paths.
 
 ### Testing locally
 
@@ -307,19 +318,43 @@ nullapt get ./SKILL.json           # install from local path
 ## Publishing
 
 ```bash
-# 1. Authenticate
+# 1. Generate your signing keypair (one-time)
+nullapt keygen
+
+# 2. Authenticate (one-time, GitHub OAuth)
 nullapt login
 
-# 2. Build your WASM binary (see above)
+# 3. Build your WASM binary (see above)
 
-# 3. Sign your manifest
-nullapt sign ./SKILL.json --key ~/.nullapt/keys/private.pem
+# 4. Sign your manifest
+nullapt sign ./SKILL.json
 
-# 4. Publish — uploads manifest + WASM, appends to the transparency log
+# 5. Publish — uploads manifest + WASM, appends to the transparency log
 nullapt publish ./SKILL.json
 ```
 
 The registry verifies your signature server-side before accepting the upload. Your public key is permanently recorded in the transparency log so users can audit key history.
+
+You don't need to clone any other repo to publish — same as `npm publish`. Work in your own repo, point the CLI at your `SKILL.json`, done.
+
+---
+
+## Publishing under an org namespace
+
+Skill names look like `<scope>/<name>` (e.g. `nullapt/web-search`). The scope is either:
+
+- **Your GitHub username** — works automatically for any logged-in user, no extra setup. Example: `enochthedev/cool-thing`.
+- **A GitHub organization** — requires you to be a public member of that GitHub org and to grant NullApt the `read:org` scope.
+
+To publish under an org namespace:
+
+1. Make your org membership public — visit `github.com/orgs/<org>/people`, find yourself, click the gear/dropdown, set membership to **Public**.
+2. Sign in to [nullapt.dev](https://nullapt.dev) and visit **/settings/organizations** → click **Connect GitHub organizations**. This re-runs OAuth with the `read:org` scope so we can verify your membership.
+3. Set `name` in your `SKILL.json` to `<org>/<skill>` and publish as usual.
+
+Casual contributors who just want to publish under their own name **never see the org screen** — the default sign-in only asks for `read:user user:email`, same as npm.
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the full contributor flow.
 
 ---
 

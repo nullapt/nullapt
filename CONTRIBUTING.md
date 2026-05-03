@@ -14,9 +14,10 @@ Thank you for considering a contribution. NullApt is fully open source and commu
 
 ### Prerequisites
 
-- Go 1.23+
+- Go 1.25+
 - Node.js 20+
 - Docker (for local Postgres) or a Postgres 15+ instance
+- Rust + `wasm32-wasip1` target (only if you're building example skills): `rustup target add wasm32-wasip1`
 
 ### Clone and build
 
@@ -99,11 +100,39 @@ docs: add self-hosting guide to README
 3. Open a PR against `main` using the PR template
 4. A maintainer will review within 3 business days
 
-## Releasing a new skill to the registry
+## Publishing a skill
 
-Skills are published independently via `nullapt publish`. You do not need a PR to add a skill to the public registry — just sign and publish it directly.
+Skills are published independently via `nullapt publish` from anywhere on your machine — same as `npm publish`. You don't need to fork or PR this repo to add a skill to the registry.
 
-If you want your skill listed as **officially audited**, open a [Skill Submission issue](.github/ISSUE_TEMPLATE/skill_submission.yml) and a maintainer will review the manifest and WASM binary.
+There are two contributor paths, with very different setup:
+
+### A. Publish under your own name *(no extra setup)*
+
+If your GitHub username is `alice`, you can publish `alice/cool-thing` (or just `cool-thing`) immediately after the standard `nullapt login`. The default OAuth grant only asks for `read:user user:email` — same scopes as npm — so casual contributors never see the org consent screen.
+
+```bash
+nullapt keygen                    # one-time keypair
+nullapt login                     # one-time GitHub OAuth
+nullapt sign  ./SKILL.json
+nullapt publish ./SKILL.json
+```
+
+### B. Publish under an organization namespace
+
+If you want to publish under an org (e.g. `acme/foo` or `nullapt/foo`), our backend needs to verify you're a member of that GitHub org. Two extra one-time steps per org:
+
+1. **Make your org membership public on GitHub.** Visit `github.com/orgs/<org>/people`, find yourself in the list, set membership to **Public**. GitHub OAuth only exposes public memberships.
+2. **Connect the org on nullapt.dev.** Sign in to [nullapt.dev](https://nullapt.dev), visit **Settings → Organizations**, click **Connect GitHub organizations**. This re-authorizes the app with the `read:org` scope and syncs your memberships.
+
+After that, set `name` in your `SKILL.json` to `<org>/<skill>` and publish as usual. New versions of an org-namespaced skill require you to still be a member; we re-check on every publish.
+
+If your org has restricted third-party OAuth apps, an org owner has to approve the NullApt app at the org level first.
+
+### Getting your skill into the curated index
+
+The list at [nullapt.dev](https://nullapt.dev) draws from the [`nullapt/skills`](https://github.com/nullapt/skills) repo — a curated index, not the source of truth. Open a PR there to add an entry pointing at your published skill.
+
+For an **officially audited** badge, open a [Skill Submission issue](.github/ISSUE_TEMPLATE/skill_submission.yml) on this repo. A maintainer will review the manifest and WASM binary.
 
 ## Code of Conduct
 
