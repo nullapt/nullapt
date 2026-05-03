@@ -28,7 +28,7 @@ const mcpProtocolVersion = "2024-11-05"
 const mcpToolSep = "__"
 
 func NewMCPCmd() *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "mcp",
 		Short: "Expose installed skills to any MCP-compliant client over stdio",
 		Long: `Run a Model Context Protocol server that bridges installed nullapt skills
@@ -38,7 +38,8 @@ Tools are exposed as <skill>__<tool>, with '/' in skill names replaced by '_'
 so the resulting id matches MCP's allowed character set. Each call rescans the
 local skill store, so newly installed skills appear without a restart.
 
-Configure your MCP host to launch:  nullapt mcp`,
+Run with no arguments to start the server (this is what MCP hosts launch).
+Use 'nullapt mcp install' to wire the server into a host config in one step.`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			s, err := store.New()
@@ -49,6 +50,8 @@ Configure your MCP host to launch:  nullapt mcp`,
 			return srv.serve(cmd.Context())
 		},
 	}
+	cmd.AddCommand(newMCPInstallCmd())
+	return cmd
 }
 
 type mcpServer struct {

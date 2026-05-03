@@ -31,6 +31,8 @@ Get started:
   nullapt get web-search        Install a skill from the registry
   nullapt list                  List installed skills
   nullapt run <skill> <tool>    Invoke a tool inside its WASM sandbox
+  nullapt describe <skill>      Show a skill's tools, schemas, and permissions
+  nullapt mcp install           Wire nullapt into Claude Desktop / Cursor / ...
   nullapt mcp                   Serve installed skills to any MCP client
   nullapt verify SKILL.json     Verify a manifest's signature
   nullapt publish SKILL.json    Publish a skill to the registry
@@ -52,6 +54,7 @@ Get started:
 		commands.NewSignCmd(),
 		commands.NewRunCmd(),
 		commands.NewMCPCmd(),
+		commands.NewDescribeCmd(),
 	)
 
 	err := root.Execute()

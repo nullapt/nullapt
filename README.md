@@ -132,7 +132,17 @@ Browse the full catalog at [nullapt.dev](https://nullapt.dev).
 
 `nullapt mcp` is a stdio Model Context Protocol server that exposes every installed skill's tools to any MCP-compatible host (Claude Desktop, LM Studio, AnythingLLM, mcp-cli, …). Tool ids are `<skill>__<tool>` with `/` in skill names rewritten to `_`.
 
-For example, in Claude Desktop's `claude_desktop_config.json`:
+The fastest path is one command — it auto-detects every supported host on the machine and writes the entry idempotently:
+
+```bash
+nullapt mcp install              # configure every host found
+nullapt mcp install --client claude-desktop
+nullapt mcp install --config ~/path/to/mcp.json   # any other client
+```
+
+After install, restart the host once. New skills appear automatically — the server rescans `~/.nullapt/skills/` on every `tools/list` and `tools/call`, no further restarts needed.
+
+If you'd rather edit the config by hand, the snippet is:
 
 ```json
 {
@@ -142,7 +152,11 @@ For example, in Claude Desktop's `claude_desktop_config.json`:
 }
 ```
 
-Newly-installed skills appear without a restart — the server rescans `~/.nullapt/skills/` on every `tools/list` and `tools/call`.
+To inspect a skill's tools and input schemas before calling them:
+
+```bash
+nullapt describe nullapt/prompt-optimizer
+```
 
 ---
 
@@ -219,7 +233,9 @@ nullapt get <skill[@version]>      Install a skill from the registry
 nullapt remove <skill>             Uninstall a skill
 nullapt list                       List installed skills
 nullapt run <skill> <tool>         Invoke a tool inside its WASM sandbox
+nullapt describe <skill>           Show a skill's tools, schemas, and permissions
 nullapt mcp                        Serve installed skills over stdio MCP
+nullapt mcp install                Wire `nullapt mcp` into a known MCP host's config
 nullapt verify <SKILL.json>        Verify a manifest's Ed25519 signature
 nullapt keygen                     Generate an Ed25519 signing keypair
 nullapt sign <SKILL.json>          Sign a manifest in-place with your private key
