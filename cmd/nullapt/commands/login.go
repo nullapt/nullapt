@@ -36,10 +36,14 @@ func NewLoginCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "login",
 		Short: "Authenticate with the NullApt registry",
-		Long: `Authenticate your CLI with the NullApt registry by providing an API token.
+		Long: `Authenticate your CLI with the NullApt registry using an API token.
 
-Generate a token at https://nullapt.dev/settings/tokens`,
+Generate a token by signing in with GitHub at:
+  https://nullapt.dev/settings/tokens
+
+Then run "nullapt login" and paste the token (starts with nlpt_).`,
 		RunE: func(cmd *cobra.Command, args []string) error {
+			fmt.Println("Generate a token at: https://nullapt.dev/settings/tokens")
 			fmt.Print("Enter your NullApt API token: ")
 			var token string
 			if _, err := fmt.Scan(&token); err != nil {
@@ -48,6 +52,9 @@ Generate a token at https://nullapt.dev/settings/tokens`,
 			token = strings.TrimSpace(token)
 			if token == "" {
 				return fmt.Errorf("token cannot be empty")
+			}
+			if !strings.HasPrefix(token, "nlpt_") {
+				fmt.Println("Warning: token does not start with 'nlpt_'. Make sure you copied the full token.")
 			}
 
 			p, err := tokenPath()

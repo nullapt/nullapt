@@ -4,8 +4,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path"
+	"regexp"
 	"strings"
 )
+
+// nameRE restricts skill names to a safe alphabet that cannot escape a
+// directory: lowercase letters, digits, hyphen, underscore, and a single
+// optional namespace segment separated by `/` (e.g. "acme/web-search").
+var nameRE = regexp.MustCompile(`^[a-z0-9][a-z0-9_\-]*(/[a-z0-9][a-z0-9_\-]*)?$`)
 
 const SchemaVersion = "1.0"
 
@@ -84,11 +91,17 @@ func (s *Skill) validate() error {
 	if s.Name == "" {
 		return fmt.Errorf("manifest missing required field: name")
 	}
+	if !nameRE.MatchString(s.Name) {
+		return fmt.Errorf("invalid skill name %q: must match %s", s.Name, nameRE)
+	}
 	if s.Version == "" {
 		return fmt.Errorf("manifest missing required field: version")
 	}
 	if s.Entry == "" {
 		return fmt.Errorf("manifest missing required field: entry")
+	}
+	if err := validateRelPath(s.Entry, "entry"); err != nil {
+		return err
 	}
 	if s.Signature.Algorithm == "" || s.Signature.PublicKey == "" || s.Signature.Value == "" {
 		return fmt.Errorf("manifest missing required signature fields")
@@ -98,6 +111,29 @@ func (s *Skill) validate() error {
 		if strings.Contains(d, "*") {
 			return fmt.Errorf("wildcard network domain %q is not allowed; list domains explicitly", d)
 		}
+	}
+	return nil
+}
+
+// validateRelPath ensures p is a safe, contained relative path with no
+// traversal, no absolute prefix, and no NUL bytes. It is used for fields
+// (such as Entry) that are joined onto a trusted root directory.
+func validateRelPath(p, field string) error {
+	if p == "" {
+		return fmt.Errorf("manifest %s is empty", field)
+	}
+	if strings.ContainsRune(p, 0) {
+		return fmt.Errorf("manifest %s contains NUL byte", field)
+	}
+	if strings.ContainsRune(p, '\\') {
+		return fmt.Errorf("manifest %s must use forward slashes", field)
+	}
+	if path.IsAbs(p) || strings.HasPrefix(p, "/") {
+		return fmt.Errorf("manifest %s must be a relative path", field)
+	}
+	cleaned := path.Clean(p)
+	if cleaned == ".." || strings.HasPrefix(cleaned, "../") || cleaned == "." {
+		return fmt.Errorf("manifest %s %q escapes skill directory", field, p)
 	}
 	return nil
 }

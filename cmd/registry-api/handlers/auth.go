@@ -14,48 +14,62 @@ type contextKey string
 
 const contextKeyUserID contextKey = "user_id"
 
-// AuthMiddleware validates the Bearer token and injects the user ID into context.
+// AuthMiddleware validates the Bearer token (either an API token or a session id)
+// and injects the user id into context. Rejects requests without a valid token.
 func AuthMiddleware(pool *db.Pool) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			header := r.Header.Get("Authorization")
-			if !strings.HasPrefix(header, "Bearer ") {
-				writeError(w, http.StatusUnauthorized, "missing or invalid Authorization header")
+			userID, ok := tryAuth(r, pool)
+			if !ok {
+				writeError(w, http.StatusUnauthorized, "authentication required")
 				return
 			}
-			rawToken := strings.TrimPrefix(header, "Bearer ")
-
-			userID, err := resolveToken(r.Context(), pool, rawToken)
-			if err != nil {
-				writeError(w, http.StatusUnauthorized, "invalid token")
-				return
-			}
-
 			ctx := context.WithValue(r.Context(), contextKeyUserID, userID)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
 }
 
-// OptionalAuth injects the user ID if a valid token is present, but does not
-// reject requests without one. Used on routes that have both public and
-// authenticated views.
+// OptionalAuth injects the user id if a valid token is present, but does not
+// reject requests without one.
 func OptionalAuth(pool *db.Pool) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			header := r.Header.Get("Authorization")
-			if rawToken, ok := strings.CutPrefix(header, "Bearer "); ok {
-				if userID, err := resolveToken(r.Context(), pool, rawToken); err == nil {
-					ctx := context.WithValue(r.Context(), contextKeyUserID, userID)
-					r = r.WithContext(ctx)
-				}
+			if userID, ok := tryAuth(r, pool); ok {
+				ctx := context.WithValue(r.Context(), contextKeyUserID, userID)
+				r = r.WithContext(ctx)
 			}
 			next.ServeHTTP(w, r)
 		})
 	}
 }
 
-func resolveToken(ctx context.Context, pool *db.Pool, rawToken string) (string, error) {
+// tryAuth returns the user id and true if the Authorization header carries
+// a valid API token (prefix "nlpt_") or a valid session id.
+func tryAuth(r *http.Request, pool *db.Pool) (string, bool) {
+	header := r.Header.Get("Authorization")
+	rawToken, ok := strings.CutPrefix(header, "Bearer ")
+	if !ok || rawToken == "" {
+		return "", false
+	}
+
+	if strings.HasPrefix(rawToken, "nlpt_") {
+		userID, err := resolveAPIToken(r.Context(), pool, rawToken)
+		if err == nil {
+			return userID, true
+		}
+		return "", false
+	}
+
+	// Otherwise, treat as a session id (UUID).
+	userID, err := pool.SessionUser(r.Context(), rawToken)
+	if err == nil {
+		return userID, true
+	}
+	return "", false
+}
+
+func resolveAPIToken(ctx context.Context, pool *db.Pool, rawToken string) (string, error) {
 	hash := sha256.Sum256([]byte(rawToken))
 	tokenHash := fmt.Sprintf("%x", hash)
 

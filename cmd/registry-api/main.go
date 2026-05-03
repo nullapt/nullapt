@@ -49,15 +49,28 @@ func main() {
 	r.Use(corsMiddleware)
 
 	skills := handlers.NewSkillsHandler(pool, blobClient)
+	tokens := handlers.NewTokensHandler(pool)
+	gh := handlers.NewGitHubOAuthHandler(pool)
 	authMw := handlers.AuthMiddleware(pool)
 	optionalAuth := handlers.OptionalAuth(pool)
 
 	r.Route("/v1", func(r chi.Router) {
+		// Skills
 		r.With(optionalAuth).Get("/skills", skills.List)
 		r.With(optionalAuth).Get("/skills/{name}", skills.Get)
 		r.With(optionalAuth).Get("/skills/{name}/{version}", skills.Get)
 		r.Get("/skills/{name}/log", skills.TransparencyLog)
 		r.With(authMw).Post("/skills", skills.Publish)
+
+		// Auth
+		r.Post("/auth/github/callback", gh.Callback)
+		r.Delete("/auth/logout", handlers.Logout(pool))
+		r.With(authMw).Get("/me", handlers.Me(pool))
+
+		// API tokens (CLI publishing)
+		r.With(authMw).Post("/tokens", tokens.Create)
+		r.With(authMw).Get("/tokens", tokens.List)
+		r.With(authMw).Delete("/tokens/{id}", tokens.Revoke)
 	})
 
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
@@ -93,7 +106,7 @@ func main() {
 func corsMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Authorization, Content-Type")
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusNoContent)

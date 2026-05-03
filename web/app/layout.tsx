@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { safeJsonLd } from "@/lib/jsonld";
+import { getCurrentUser } from "@/lib/auth";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://nullapt.dev";
 const SITE_NAME = "NullApt";
@@ -65,7 +67,9 @@ export const viewport: Viewport = {
   colorScheme: "dark",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const user = await getCurrentUser();
+
   return (
     <html lang="en" className="h-full">
       <head>
@@ -73,7 +77,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
+            __html: safeJsonLd({
               "@context": "https://schema.org",
               "@type": "SoftwareApplication",
               name: "NullApt",
@@ -113,6 +117,43 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               >
                 github
               </a>
+              {user ? (
+                <div className="flex items-center gap-3 pl-4" style={{ borderLeft: "1px solid var(--border)" }}>
+                  <a
+                    href="/settings/tokens"
+                    className="flex items-center gap-2 hover:text-white transition-colors"
+                  >
+                    {user.avatar_url && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={user.avatar_url}
+                        alt={user.username}
+                        width={20}
+                        height={20}
+                        style={{ borderRadius: "50%" }}
+                      />
+                    )}
+                    <span style={{ color: "var(--accent)" }}>@{user.username}</span>
+                  </a>
+                  <form action="/auth/logout" method="POST">
+                    <button
+                      type="submit"
+                      className="text-xs hover:text-white transition-colors"
+                      style={{ color: "var(--muted)" }}
+                    >
+                      logout
+                    </button>
+                  </form>
+                </div>
+              ) : (
+                <a
+                  href="/login"
+                  style={{ background: "var(--accent)", color: "#000" }}
+                  className="rounded px-3 py-1 text-xs font-semibold hover:opacity-90 transition-opacity"
+                >
+                  sign in
+                </a>
+              )}
             </nav>
           </div>
         </header>

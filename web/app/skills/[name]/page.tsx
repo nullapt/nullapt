@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getSkill, getTransparencyLog, type TransparencyEntry } from "@/lib/api";
+import { safeJsonLd } from "@/lib/jsonld";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://nullapt.dev";
 
@@ -77,7 +78,7 @@ export default async function SkillPage({ params }: { params: Promise<{ name: st
     <div className="max-w-4xl mx-auto px-6 py-12">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }}
       />
       {/* Breadcrumb */}
       <div className="text-xs mb-6" style={{ color: "var(--muted)" }}>
