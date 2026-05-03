@@ -5,12 +5,16 @@ import (
 	"os"
 
 	"github.com/nullapt/nullapt/cmd/nullapt/commands"
+	"github.com/nullapt/nullapt/internal/registry"
 	"github.com/spf13/cobra"
 )
 
 var version = "0.1.0-dev"
 
 func main() {
+	commands.Version = version
+	registry.Version = version
+
 	// Kick off the update check in background before running the command.
 	updateCh := commands.CheckForUpdate(version)
 

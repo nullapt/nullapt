@@ -10,12 +10,18 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"runtime"
 	"time"
 
 	"github.com/nullapt/nullapt/internal/manifest"
 )
 
 const defaultBaseURL = "https://registry.nullapt.dev"
+
+// Version is set by main at startup so registry requests advertise the CLI version.
+// Cloudflare bot heuristics block the default Go-http-client UA, so this must be
+// kept in sync with the binary's version.
+var Version = "dev"
 
 // Client talks to the NullApt registry API.
 type Client struct {
@@ -178,7 +184,7 @@ func (c *Client) get(ctx context.Context, url string) ([]byte, error) {
 }
 
 func (c *Client) setHeaders(req *http.Request) {
-	req.Header.Set("User-Agent", "nullapt-cli/0.1.0")
+	req.Header.Set("User-Agent", fmt.Sprintf("nullapt-cli/%s (%s; %s)", Version, runtime.GOOS, runtime.GOARCH))
 	req.Header.Set("Accept", "application/json")
 	if c.token != "" {
 		req.Header.Set("Authorization", "Bearer "+c.token)

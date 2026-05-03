@@ -74,11 +74,19 @@ func loginWithBrowser(browserless bool) error {
 	base := registryURL()
 
 	// 1. Init the auth request
-	resp, err := http.Post(base+"/v1/auth/cli/init", "application/json", nil) //nolint:noctx
+	req, err := registryRequest(http.MethodPost, base+"/v1/auth/cli/init", nil)
+	if err != nil {
+		return fmt.Errorf("building request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := registryHTTP.Do(req)
 	if err != nil {
 		return fmt.Errorf("connecting to registry: %w", err)
 	}
 	defer resp.Body.Close()
+	if resp.StatusCode >= 400 {
+		return fmt.Errorf("registry returned HTTP %d at /v1/auth/cli/init", resp.StatusCode)
+	}
 
 	var init struct {
 		ID              string `json:"id"`
@@ -133,7 +141,11 @@ func loginWithBrowser(browserless bool) error {
 }
 
 func pollCLIAuth(base, id string) (token string, done bool, err error) {
-	resp, err := http.Get(base + "/v1/auth/cli/poll?id=" + id) //nolint:noctx
+	req, err := registryRequest(http.MethodGet, base+"/v1/auth/cli/poll?id="+id, nil)
+	if err != nil {
+		return "", false, fmt.Errorf("building request: %w", err)
+	}
+	resp, err := registryHTTP.Do(req)
 	if err != nil {
 		return "", false, fmt.Errorf("polling: %w", err)
 	}
