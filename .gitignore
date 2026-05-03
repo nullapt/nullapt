@@ -33,3 +33,7 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 .docs/
+
+# Rust skill build artifacts
+examples/**/target/
+examples/**/Cargo.lock
