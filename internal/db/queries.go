@@ -95,6 +95,34 @@ func (p *Pool) GetSkill(ctx context.Context, name, version string) (*SkillRow, e
 	return &r, nil
 }
 
+// GetSkillManifest returns the raw manifest_json for a skill version
+// (empty version = latest published).
+func (p *Pool) GetSkillManifest(ctx context.Context, name, version string) ([]byte, error) {
+	var manifestJSON []byte
+	var err error
+	if version == "" {
+		err = p.QueryRow(ctx, `
+			SELECT sv.manifest_json
+			FROM skills s
+			JOIN skill_versions sv ON sv.skill_id = s.id
+			WHERE s.name = $1
+			ORDER BY sv.published_at DESC
+			LIMIT 1
+		`, name).Scan(&manifestJSON)
+	} else {
+		err = p.QueryRow(ctx, `
+			SELECT sv.manifest_json
+			FROM skills s
+			JOIN skill_versions sv ON sv.skill_id = s.id
+			WHERE s.name = $1 AND sv.version = $2
+		`, name, version).Scan(&manifestJSON)
+	}
+	if err != nil {
+		return nil, fmt.Errorf("manifest for %q not found: %w", name, err)
+	}
+	return manifestJSON, nil
+}
+
 // PublishSkill inserts or updates a skill version and appends to the transparency log.
 func (p *Pool) PublishSkill(ctx context.Context, ownerID, ownerOrgID string, skill *manifest.Skill, wasmURL, manifestHash string) error {
 	manifestJSON, err := json.Marshal(skill)

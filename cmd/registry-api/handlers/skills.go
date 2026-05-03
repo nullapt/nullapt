@@ -75,6 +75,11 @@ func (h *SkillsHandler) Get(w http.ResponseWriter, r *http.Request) {
 		h.transparencyLogFor(w, r, name)
 		return
 	}
+	if strings.HasSuffix(path, "/manifest") {
+		name := strings.TrimSuffix(path, "/manifest")
+		h.manifestFor(w, r, name)
+		return
+	}
 
 	name := path
 	version := ""
@@ -233,6 +238,19 @@ func (h *SkillsHandler) Publish(w http.ResponseWriter, r *http.Request) {
 		"wasm_url": blobResult.URL,
 		"status":   "published",
 	})
+}
+
+// manifestFor returns the raw signed SKILL.json for the latest version of a
+// given skill. The CLI fetches this to verify signatures locally before install.
+func (h *SkillsHandler) manifestFor(w http.ResponseWriter, r *http.Request, name string) {
+	manifestJSON, err := h.db.GetSkillManifest(r.Context(), name, "")
+	if err != nil {
+		writeError(w, http.StatusNotFound, err.Error())
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(manifestJSON) //nolint:errcheck
 }
 
 // transparencyLogFor renders the transparency log for a given skill name.

@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"time"
 
 	"github.com/nullapt/nullapt/internal/manifest"
@@ -87,8 +88,13 @@ func (c *Client) Lookup(ctx context.Context, name string) (*SkillMeta, error) {
 }
 
 // DownloadManifest fetches and parses the SKILL.json for a skill.
+// manifest_url from the registry is a relative path; WASM URLs are absolute.
 func (c *Client) DownloadManifest(ctx context.Context, meta *SkillMeta) (*manifest.Skill, error) {
-	data, err := c.get(ctx, meta.ManifestURL)
+	url := meta.ManifestURL
+	if strings.HasPrefix(url, "/") {
+		url = c.base + url
+	}
+	data, err := c.get(ctx, url)
 	if err != nil {
 		return nil, fmt.Errorf("downloading manifest: %w", err)
 	}
