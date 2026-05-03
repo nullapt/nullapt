@@ -59,21 +59,28 @@ func (h *GitHubOAuthHandler) Callback(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var body struct {
-		Code string `json:"code"`
+		Code        string `json:"code"`
+		AccessToken string `json:"access_token"` // pre-exchanged by the web app
 	}
-	if err := json.NewDecoder(r.Body).Decode(&body); err != nil || body.Code == "" {
-		writeError(w, http.StatusBadRequest, "missing 'code'")
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil || (body.Code == "" && body.AccessToken == "") {
+		writeError(w, http.StatusBadRequest, "missing 'code' or 'access_token'")
 		return
 	}
 
 	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 	defer cancel()
 
-	// 1. Exchange code for access token
-	accessToken, err := h.exchangeCode(ctx, body.Code)
-	if err != nil {
-		writeError(w, http.StatusBadGateway, "exchanging github code: "+err.Error())
-		return
+	// 1. Get GitHub access token (either exchange code or use pre-exchanged token)
+	var accessToken string
+	if body.AccessToken != "" {
+		accessToken = body.AccessToken
+	} else {
+		var err error
+		accessToken, err = h.exchangeCode(ctx, body.Code)
+		if err != nil {
+			writeError(w, http.StatusBadGateway, "exchanging github code: "+err.Error())
+			return
+		}
 	}
 
 	// 2. Fetch user info
