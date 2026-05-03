@@ -2,13 +2,16 @@ package handlers
 
 import (
 	"bytes"
+	"context"
 	"crypto/sha256"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"strings"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5"
@@ -234,12 +237,44 @@ func (h *SkillsHandler) Publish(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	notifyRevalidate(skill.Name)
+
 	writeJSON(w, http.StatusCreated, map[string]any{
 		"name":     skill.Name,
 		"version":  skill.Version,
 		"wasm_url": blobResult.URL,
 		"status":   "published",
 	})
+}
+
+// notifyRevalidate pings the web app's revalidate webhook so the homepage
+// and skill page caches are marked stale. Fire-and-forget: a webhook failure
+// must not surface to the publishing client.
+func notifyRevalidate(skillName string) {
+	url := os.Getenv("WEB_REVALIDATE_URL")
+	secret := os.Getenv("WEB_REVALIDATE_SECRET")
+	if url == "" || secret == "" {
+		return
+	}
+
+	go func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		body := fmt.Sprintf(`{"skill":%q}`, skillName)
+		req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, strings.NewReader(body))
+		if err != nil {
+			return
+		}
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("X-Revalidate-Secret", secret)
+
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			return
+		}
+		_ = resp.Body.Close()
+	}()
 }
 
 // manifestFor returns the raw signed SKILL.json for the latest version of a

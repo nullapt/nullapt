@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { listSkills, type SkillMeta } from "@/lib/api";
 import { getRepo } from "@/lib/github";
@@ -19,45 +20,72 @@ async function fetchStars(): Promise<number | null> {
   }
 }
 
-export default async function HomePage({
+export default function HomePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>;
+}) {
+  return (
+    <div className="max-w-6xl mx-auto px-6 py-12">
+      <Hero />
+      <Suspense fallback={<SkillsSkeleton />}>
+        <SkillsSection searchParams={searchParams} />
+      </Suspense>
+      <Suspense fallback={null}>
+        <Stats />
+      </Suspense>
+    </div>
+  );
+}
+
+function Hero() {
+  return (
+    <div className="mb-12">
+      <div className="text-xs mb-4" style={{ color: "var(--muted)" }}>
+        <span style={{ color: "var(--accent)" }}>●</span> LIVE · nullapt registry v1
+      </div>
+      <h1 className="text-3xl font-bold mb-3 leading-tight">
+        The Private-First Registry
+        <br />
+        <span style={{ color: "var(--accent)" }}>for AI Skills</span>
+      </h1>
+      <p style={{ color: "var(--muted)" }} className="mb-8 max-w-xl">
+        Every skill is cryptographically signed, statically analyzed, and sandboxed in WASM-WASI.
+        No data leaves your machine unless explicitly declared in the manifest.
+      </p>
+      <div
+        style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
+        className="rounded p-4 inline-block text-sm"
+      >
+        <span style={{ color: "var(--muted)" }}>$ </span>
+        <span style={{ color: "var(--accent)" }}>nullapt get web-search</span>
+      </div>
+    </div>
+  );
+}
+
+function SkillsSkeleton() {
+  return (
+    <div style={{ color: "var(--muted)" }} className="py-12 text-center text-sm">
+      Loading skills…
+    </div>
+  );
+}
+
+async function SkillsSection({
   searchParams,
 }: {
   searchParams: Promise<{ q?: string }>;
 }) {
   const { q } = await searchParams;
-  const [skills, stars] = await Promise.all([fetchSkills(q), fetchStars()]);
+  const skills = await fetchSkills(q);
 
-  // Trending = top 5 by downloads when not actively searching
   const trending = !q
     ? [...skills].sort((a, b) => b.downloads - a.downloads).slice(0, 5)
     : [];
 
   return (
-    <div className="max-w-6xl mx-auto px-6 py-12">
-      {/* Hero */}
-      <div className="mb-12">
-        <div className="text-xs mb-4" style={{ color: "var(--muted)" }}>
-          <span style={{ color: "var(--accent)" }}>●</span> LIVE · nullapt registry v1
-        </div>
-        <h1 className="text-3xl font-bold mb-3 leading-tight">
-          The Private-First Registry
-          <br />
-          <span style={{ color: "var(--accent)" }}>for AI Skills</span>
-        </h1>
-        <p style={{ color: "var(--muted)" }} className="mb-8 max-w-xl">
-          Every skill is cryptographically signed, statically analyzed, and sandboxed in WASM-WASI.
-          No data leaves your machine unless explicitly declared in the manifest.
-        </p>
-        <div
-          style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
-          className="rounded p-4 inline-block text-sm"
-        >
-          <span style={{ color: "var(--muted)" }}>$ </span>
-          <span style={{ color: "var(--accent)" }}>nullapt get web-search</span>
-        </div>
-      </div>
-
-      {/* Search */}
+    <>
       <form method="GET" className="mb-8">
         <div className="flex gap-3 max-w-lg">
           <input
@@ -82,7 +110,6 @@ export default async function HomePage({
         </div>
       </form>
 
-      {/* Skill table */}
       {skills.length === 0 ? (
         <div style={{ color: "var(--muted)" }} className="py-12 text-center text-sm">
           {q ? `No skills matched "${q}"` : "Registry is empty or unreachable."}
@@ -140,7 +167,6 @@ export default async function HomePage({
         </div>
       )}
 
-      {/* Trending skills */}
       {trending.length > 0 && !q && (
         <div className="mt-14">
           <div className="flex items-center justify-between mb-4">
@@ -200,42 +226,47 @@ export default async function HomePage({
           </div>
         </div>
       )}
+    </>
+  );
+}
 
-      {/* Stats strip */}
-      <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-4 text-center text-sm" style={{ color: "var(--muted)" }}>
-        {(
-          [
-            ["Ed25519 Signed", "every manifest verified"],
-            ["WASM Sandboxed", "hard capability limits"],
-            ["Offline First", "no cloud dependency"],
-          ] as const
-        ).map(([title, sub]) => (
-          <div
-            key={title}
-            style={{ border: "1px solid var(--border)", background: "var(--surface)" }}
-            className="rounded p-4"
-          >
-            <div style={{ color: "var(--accent)" }} className="font-semibold mb-1">
-              {title}
-            </div>
-            <div className="text-xs">{sub}</div>
+async function Stats() {
+  const stars = await fetchStars();
+
+  return (
+    <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-4 text-center text-sm" style={{ color: "var(--muted)" }}>
+      {(
+        [
+          ["Ed25519 Signed", "every manifest verified"],
+          ["WASM Sandboxed", "hard capability limits"],
+          ["Offline First", "no cloud dependency"],
+        ] as const
+      ).map(([title, sub]) => (
+        <div
+          key={title}
+          style={{ border: "1px solid var(--border)", background: "var(--surface)" }}
+          className="rounded p-4"
+        >
+          <div style={{ color: "var(--accent)" }} className="font-semibold mb-1">
+            {title}
           </div>
-        ))}
-        {stars !== null && (
-          <a
-            href="https://github.com/nullapt/nullapt"
-            target="_blank"
-            rel="noreferrer"
-            style={{ border: "1px solid var(--border)", background: "var(--surface)" }}
-            className="rounded p-4 hover:border-green-500 transition-colors"
-          >
-            <div style={{ color: "var(--accent)" }} className="font-semibold mb-1">
-              {stars.toLocaleString()} stars
-            </div>
-            <div className="text-xs">on GitHub</div>
-          </a>
-        )}
-      </div>
+          <div className="text-xs">{sub}</div>
+        </div>
+      ))}
+      {stars !== null && (
+        <a
+          href="https://github.com/nullapt/nullapt"
+          target="_blank"
+          rel="noreferrer"
+          style={{ border: "1px solid var(--border)", background: "var(--surface)" }}
+          className="rounded p-4 hover:border-green-500 transition-colors"
+        >
+          <div style={{ color: "var(--accent)" }} className="font-semibold mb-1">
+            {stars.toLocaleString()} stars
+          </div>
+          <div className="text-xs">on GitHub</div>
+        </a>
+      )}
     </div>
   );
 }

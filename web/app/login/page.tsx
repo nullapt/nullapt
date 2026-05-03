@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 
@@ -17,7 +18,19 @@ const ERROR_MESSAGES: Record<string, string> = {
   redirect_uri_mismatch: "OAuth redirect URI mismatch — check your GitHub OAuth app settings.",
 };
 
-export default async function LoginPage({
+export default function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ next?: string; error?: string }>;
+}) {
+  return (
+    <Suspense fallback={null}>
+      <LoginBody searchParams={searchParams} />
+    </Suspense>
+  );
+}
+
+async function LoginBody({
   searchParams,
 }: {
   searchParams: Promise<{ next?: string; error?: string }>;

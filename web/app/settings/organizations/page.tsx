@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { authedFetch, getCurrentUser } from "@/lib/auth";
 
@@ -18,7 +19,15 @@ type Org = {
   avatar_url: string | null;
 };
 
-export default async function OrganizationsPage() {
+export default function OrganizationsPage() {
+  return (
+    <Suspense fallback={null}>
+      <OrganizationsBody />
+    </Suspense>
+  );
+}
+
+async function OrganizationsBody() {
   const user = await getCurrentUser();
   if (!user) redirect("/login?next=/settings/organizations");
 

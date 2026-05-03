@@ -1,7 +1,6 @@
 import { ImageResponse } from "next/og";
 import { getSkill } from "@/lib/api";
 
-export const runtime = "edge";
 export const contentType = "image/png";
 const size = { width: 1200, height: 630 };
 

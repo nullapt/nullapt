@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { authedFetch, getCurrentUser, type APITokenMeta } from "@/lib/auth";
 import { CreateTokenForm } from "./CreateTokenForm";
@@ -10,7 +11,15 @@ export const metadata: Metadata = {
   robots: { index: false },
 };
 
-export default async function TokensPage() {
+export default function TokensPage() {
+  return (
+    <Suspense fallback={null}>
+      <TokensBody />
+    </Suspense>
+  );
+}
+
+async function TokensBody() {
   const user = await getCurrentUser();
   if (!user) redirect("/login?next=/settings/tokens");
 

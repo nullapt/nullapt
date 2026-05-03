@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { getSkill, getTransparencyLog, type TransparencyEntry } from "@/lib/api";
 import { safeJsonLd } from "@/lib/jsonld";
@@ -35,7 +36,15 @@ export async function generateMetadata({
   }
 }
 
-export default async function SkillPage({ params }: { params: Promise<{ name: string[] }> }) {
+export default function SkillPage({ params }: { params: Promise<{ name: string[] }> }) {
+  return (
+    <Suspense fallback={null}>
+      <SkillBody params={params} />
+    </Suspense>
+  );
+}
+
+async function SkillBody({ params }: { params: Promise<{ name: string[] }> }) {
   const { name: parts } = await params;
   const name = parts.join("/");
 

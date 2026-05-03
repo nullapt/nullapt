@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import ApproveButton from "./ApproveButton";
@@ -8,7 +9,19 @@ export const metadata: Metadata = {
   robots: { index: false },
 };
 
-export default async function CLIAuthPage({
+export default function CLIAuthPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ id?: string }>;
+}) {
+  return (
+    <Suspense fallback={null}>
+      <CLIAuthBody searchParams={searchParams} />
+    </Suspense>
+  );
+}
+
+async function CLIAuthBody({
   searchParams,
 }: {
   searchParams: Promise<{ id?: string }>;
