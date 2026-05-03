@@ -46,6 +46,8 @@ Get started:
 		commands.NewPublishCmd(),
 		commands.NewLoginCmd(),
 		commands.NewLogoutCmd(),
+		commands.NewKeygenCmd(),
+		commands.NewSignCmd(),
 	)
 
 	err := root.Execute()

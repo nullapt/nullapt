@@ -84,7 +84,37 @@ func ParseBytes(data []byte) (*Skill, error) {
 	return &s, nil
 }
 
+// ParseUnsigned reads and decodes a SKILL.json without requiring signature
+// fields to be present. Use this before signing, when the manifest may not
+// yet have a signature.
+func ParseUnsigned(path string) (*Skill, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, fmt.Errorf("reading manifest: %w", err)
+	}
+	var s Skill
+	if err := json.Unmarshal(data, &s); err != nil {
+		return nil, fmt.Errorf("parsing manifest: %w", err)
+	}
+	if err := s.validateStructure(); err != nil {
+		return nil, err
+	}
+	return &s, nil
+}
+
 func (s *Skill) validate() error {
+	if err := s.validateStructure(); err != nil {
+		return err
+	}
+	if s.Signature.Algorithm == "" || s.Signature.PublicKey == "" || s.Signature.Value == "" {
+		return fmt.Errorf("manifest missing required signature fields")
+	}
+	return nil
+}
+
+// validateStructure checks all manifest fields except the signature block,
+// used when parsing a manifest that hasn't been signed yet.
+func (s *Skill) validateStructure() error {
 	if s.SchemaVersion != SchemaVersion {
 		return fmt.Errorf("unsupported schema_version %q (want %q)", s.SchemaVersion, SchemaVersion)
 	}
@@ -103,10 +133,6 @@ func (s *Skill) validate() error {
 	if err := validateRelPath(s.Entry, "entry"); err != nil {
 		return err
 	}
-	if s.Signature.Algorithm == "" || s.Signature.PublicKey == "" || s.Signature.Value == "" {
-		return fmt.Errorf("manifest missing required signature fields")
-	}
-	// Reject wildcard network domains — every domain must be explicit.
 	for _, d := range s.Permissions.Network.Domains {
 		if strings.Contains(d, "*") {
 			return fmt.Errorf("wildcard network domain %q is not allowed; list domains explicitly", d)
