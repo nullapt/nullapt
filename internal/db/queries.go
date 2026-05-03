@@ -26,11 +26,12 @@ type SkillRow struct {
 func (p *Pool) ListSkills(ctx context.Context, search string) ([]SkillRow, error) {
 	query := `
 		SELECT DISTINCT ON (s.name)
-			s.name, sv.version, sv.description, u.username,
+			s.name, sv.version, sv.description, COALESCE(o.login, u.username) AS author,
 			sv.license, sv.wasm_url, sv.downloads, sv.published_at
 		FROM skills s
 		JOIN skill_versions sv ON sv.skill_id = s.id
 		JOIN users u ON u.id = s.owner_id
+			LEFT JOIN organizations o ON o.id = s.owner_org_id
 		WHERE ($1 = '' OR s.name ILIKE '%' || $1 || '%' OR sv.description ILIKE '%' || $1 || '%')
 		ORDER BY s.name, sv.published_at DESC
 	`
@@ -59,11 +60,12 @@ func (p *Pool) GetSkill(ctx context.Context, name, version string) (*SkillRow, e
 
 	if version == "" {
 		query = `
-			SELECT s.name, sv.version, sv.description, u.username,
+			SELECT s.name, sv.version, sv.description, COALESCE(o.login, u.username) AS author,
 			       sv.license, sv.wasm_url, sv.downloads, sv.published_at
 			FROM skills s
 			JOIN skill_versions sv ON sv.skill_id = s.id
 			JOIN users u ON u.id = s.owner_id
+			LEFT JOIN organizations o ON o.id = s.owner_org_id
 			WHERE s.name = $1
 			ORDER BY sv.published_at DESC
 			LIMIT 1
@@ -71,11 +73,12 @@ func (p *Pool) GetSkill(ctx context.Context, name, version string) (*SkillRow, e
 		args = []any{name}
 	} else {
 		query = `
-			SELECT s.name, sv.version, sv.description, u.username,
+			SELECT s.name, sv.version, sv.description, COALESCE(o.login, u.username) AS author,
 			       sv.license, sv.wasm_url, sv.downloads, sv.published_at
 			FROM skills s
 			JOIN skill_versions sv ON sv.skill_id = s.id
 			JOIN users u ON u.id = s.owner_id
+			LEFT JOIN organizations o ON o.id = s.owner_org_id
 			WHERE s.name = $1 AND sv.version = $2
 		`
 		args = []any{name, version}

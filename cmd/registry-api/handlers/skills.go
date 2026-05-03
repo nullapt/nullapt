@@ -61,10 +61,31 @@ func (h *SkillsHandler) List(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, out)
 }
 
-// Get handles GET /v1/skills/{name} and GET /v1/skills/{name}/{version}
+// Get handles all GET /v1/skills/* lookups. The wildcard path is parsed as:
+//
+//	foo                       → name=foo
+//	foo@1.0.0                 → name=foo, version=1.0.0
+//	ns/foo                    → name=ns/foo
+//	ns/foo@1.0.0              → name=ns/foo, version=1.0.0
+//	(any of the above)/log    → transparency log for that name
 func (h *SkillsHandler) Get(w http.ResponseWriter, r *http.Request) {
-	name := chi.URLParam(r, "name")
-	version := chi.URLParam(r, "version") // empty string = latest
+	path := chi.URLParam(r, "*")
+	if strings.HasSuffix(path, "/log") {
+		name := strings.TrimSuffix(path, "/log")
+		h.transparencyLogFor(w, r, name)
+		return
+	}
+
+	name := path
+	version := ""
+	if i := strings.LastIndexByte(path, '@'); i > 0 {
+		name = path[:i]
+		version = path[i+1:]
+	}
+	if name == "" {
+		writeError(w, http.StatusBadRequest, "missing skill name")
+		return
+	}
 
 	skill, err := h.db.GetSkill(r.Context(), name, version)
 	if err != nil {
@@ -214,9 +235,9 @@ func (h *SkillsHandler) Publish(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// TransparencyLog handles GET /v1/skills/{name}/log
-func (h *SkillsHandler) TransparencyLog(w http.ResponseWriter, r *http.Request) {
-	name := chi.URLParam(r, "name")
+// transparencyLogFor renders the transparency log for a given skill name.
+// Called from Get() when the URL ends in /log.
+func (h *SkillsHandler) transparencyLogFor(w http.ResponseWriter, r *http.Request, name string) {
 	entries, err := h.db.GetTransparencyLog(r.Context(), name)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, err.Error())

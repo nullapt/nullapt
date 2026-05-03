@@ -58,10 +58,10 @@ func main() {
 	r.Route("/v1", func(r chi.Router) {
 		// Skills
 		r.With(optionalAuth).Get("/skills", skills.List)
-		r.With(optionalAuth).Get("/skills/{name}", skills.Get)
-		r.With(optionalAuth).Get("/skills/{name}/{version}", skills.Get)
-		r.Get("/skills/{name}/log", skills.TransparencyLog)
 		r.With(authMw).Post("/skills", skills.Publish)
+		// One wildcard handler dispatches name, name@version, and /log.
+		// Allows namespaced names (org/skill) via slashes in the path.
+		r.With(optionalAuth).Get("/skills/*", skills.Get)
 
 		// Auth
 		r.Post("/auth/github/callback", gh.Callback)
