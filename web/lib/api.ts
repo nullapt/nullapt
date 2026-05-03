@@ -46,7 +46,7 @@ export interface TransparencyEntry {
 }
 
 async function get<T>(path: string): Promise<T> {
-  const res = await fetch(`${REGISTRY_URL}${path}`, { cache: "no-store" });
+  const res = await fetch(`${REGISTRY_URL}${path}`);
   if (!res.ok) throw new Error(`Registry returned ${res.status} for ${path}`);
   return res.json() as Promise<T>;
 }

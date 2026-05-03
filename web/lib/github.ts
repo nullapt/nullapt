@@ -1,4 +1,8 @@
+import { cacheLife, cacheTag } from "next/cache";
+
 const REPO = "nullapt/nullapt";
+
+export const GITHUB_TAG = "github";
 
 export interface GitHubRepo {
   stargazers_count: number;
@@ -28,13 +32,21 @@ async function ghFetch<T>(path: string): Promise<T> {
   if (process.env.GITHUB_TOKEN) {
     headers["Authorization"] = `Bearer ${process.env.GITHUB_TOKEN}`;
   }
-  const res = await fetch(`https://api.github.com/repos/${REPO}${path}`, {
-    headers,
-    next: { revalidate: 300 },
-  });
+  const res = await fetch(`https://api.github.com/repos/${REPO}${path}`, { headers });
   if (!res.ok) throw new Error(`GitHub API ${res.status} for ${path}`);
   return res.json() as Promise<T>;
 }
 
-export const getRepo = () => ghFetch<GitHubRepo>("");
-export const getReleases = () => ghFetch<GitHubRelease[]>("/releases?per_page=20");
+export async function getRepo(): Promise<GitHubRepo> {
+  "use cache";
+  cacheTag(GITHUB_TAG);
+  cacheLife("hours");
+  return ghFetch<GitHubRepo>("");
+}
+
+export async function getReleases(): Promise<GitHubRelease[]> {
+  "use cache";
+  cacheTag(GITHUB_TAG);
+  cacheLife("hours");
+  return ghFetch<GitHubRelease[]>("/releases?per_page=20");
+}

@@ -131,20 +131,20 @@ export default function DocsPage() {
 
         {/* Quick start */}
         <Section id="quick-start" title="QUICK START">
-          <Code>{`# Install a skill from the registry
-$ nullapt get web-search
+          <Code>{`# Install a skill from the registry (org/name format)
+$ nullapt get nullapt/prompt-optimizer
 
 # Short form (same as get)
-$ nullapt i web-search
+$ nullapt i nullapt/prompt-optimizer
 
 # Install a specific version
-$ nullapt i web-search@1.2.0
+$ nullapt i nullapt/prompt-optimizer@1.2.0
 
 # List installed skills
 $ nullapt list
 
 # Remove a skill
-$ nullapt remove web-search`}</Code>
+$ nullapt remove nullapt/prompt-optimizer`}</Code>
           <p style={{ color: "var(--muted)" }} className="text-sm">
             Skills install to <code style={{ color: "var(--accent)" }}>~/.nullapt/skills/</code>.
             Any MCP-compliant client (LM Studio, AnythingLLM, Ollama) pointed at that directory
@@ -181,15 +181,19 @@ $ nullapt remove web-search`}</Code>
         <Section id="building" title="BUILDING A SKILL">
           <p style={{ color: "var(--muted)" }} className="text-sm mb-4">
             Skills are WASM-WASI binaries compiled from any language that targets{" "}
-            <code style={{ color: "var(--accent)" }}>wasm32-wasi</code>. Rust is recommended.
+            <code style={{ color: "var(--accent)" }}>wasm32-wasip1</code>. Rust is recommended;
+            TinyGo, AssemblyScript, Zig, and C/C++ also work.
           </p>
-          <Code>{`# 1. Create a new Rust library
+          <Code>{`# 0. Add the WASI target (one-time)
+$ rustup target add wasm32-wasip1
+
+# 1. Create a new Rust library
 $ cargo new --lib my-skill && cd my-skill
 $ cargo add extism-pdk
 
 # 2. Build for WASM
-$ cargo build --target wasm32-wasi --release
-$ cp target/wasm32-wasi/release/my_skill.wasm skill.wasm`}</Code>
+$ cargo build --target wasm32-wasip1 --release
+$ cp target/wasm32-wasip1/release/my_skill.wasm skill.wasm`}</Code>
 
           <p style={{ color: "var(--muted)" }} className="text-sm mb-4">
             Your skill exports named functions that match the tool names in{" "}
@@ -213,7 +217,7 @@ pub fn web_search(input: Json<SearchInput>) -> FnResult<Json<SearchOutput>> {
           >
             <pre style={{ color: "var(--foreground)" }}>{JSON.stringify({
               schema_version: "1.0",
-              name: "my-skill",
+              name: "your-username/my-skill",
               version: "0.1.0",
               description: "What your skill does",
               author: "your-username",
@@ -279,7 +283,7 @@ $ go run ./cmd/registry-api`}</Code>
           <p style={{ color: "var(--muted)" }} className="text-sm mb-4">
             Point the CLI at your instance:
           </p>
-          <Code>{`$ nullapt i my-skill --registry https://my-registry.internal
+          <Code>{`$ nullapt i my-org/my-skill --registry https://my-registry.internal
 $ nullapt publish SKILL.json --registry https://my-registry.internal`}</Code>
         </Section>
       </div>
