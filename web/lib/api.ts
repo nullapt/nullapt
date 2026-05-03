@@ -50,7 +50,7 @@ export const listSkills = (q = "") =>
   get<SkillMeta[]>(`/v1/skills${q ? `?q=${encodeURIComponent(q)}` : ""}`);
 
 export const getSkill = (name: string, version?: string) =>
-  get<SkillMeta>(`/v1/skills/${name}${version ? `/${version}` : ""}`);
+  get<SkillMeta>(`/v1/skills/${name}${version ? `@${version}` : ""}`);
 
 export const getTransparencyLog = (name: string) =>
   get<TransparencyEntry[]>(`/v1/skills/${name}/log`);

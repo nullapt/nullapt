@@ -22,12 +22,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   let skillRoutes: MetadataRoute.Sitemap = [];
   try {
     const skills = await listSkills();
-    skillRoutes = skills.map((skill) => ({
-      url: `${SITE_URL}/skills/${skill.name}`,
-      lastModified: new Date(skill.published_at),
-      changeFrequency: "weekly" as const,
-      priority: 0.7,
-    }));
+    skillRoutes = skills.map((skill) => {
+      const ts = skill.published_at ? new Date(skill.published_at) : null;
+      const lastModified = ts && !isNaN(ts.getTime()) ? ts : new Date();
+      return {
+        url: `${SITE_URL}/skills/${skill.name}`,
+        lastModified,
+        changeFrequency: "weekly" as const,
+        priority: 0.7,
+      };
+    });
   } catch {
     // Registry unreachable at build time — static routes still generated
   }

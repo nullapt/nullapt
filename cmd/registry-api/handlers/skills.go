@@ -44,6 +44,7 @@ func (h *SkillsHandler) List(w http.ResponseWriter, r *http.Request) {
 		Downloads   int64  `json:"downloads"`
 		ManifestURL string `json:"manifest_url"`
 		WASMUrl     string `json:"wasm_url"`
+		PublishedAt string `json:"published_at"`
 	}
 
 	out := make([]item, len(skills))
@@ -56,6 +57,7 @@ func (h *SkillsHandler) List(w http.ResponseWriter, r *http.Request) {
 			Downloads:   s.Downloads,
 			ManifestURL: fmt.Sprintf("/v1/skills/%s/manifest", s.Name),
 			WASMUrl:     s.WASMUrl,
+			PublishedAt: s.PublishedAt.Format("2006-01-02T15:04:05Z07:00"),
 		}
 	}
 	writeJSON(w, http.StatusOK, out)

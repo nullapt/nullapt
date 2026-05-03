@@ -8,9 +8,10 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://nullapt.dev";
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ name: string }>;
+  params: Promise<{ name: string[] }>;
 }): Promise<Metadata> {
-  const { name } = await params;
+  const { name: parts } = await params;
+  const name = parts.join("/");
   try {
     const skill = await getSkill(name);
     const title = `${skill.name} — NullApt`;
@@ -32,8 +33,9 @@ export async function generateMetadata({
   }
 }
 
-export default async function SkillPage({ params }: { params: Promise<{ name: string }> }) {
-  const { name } = await params;
+export default async function SkillPage({ params }: { params: Promise<{ name: string[] }> }) {
+  const { name: parts } = await params;
+  const name = parts.join("/");
 
   let skill;
   try {
