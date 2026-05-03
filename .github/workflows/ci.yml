@@ -66,8 +66,8 @@ jobs:
         run: npx eslint . --max-warnings 0
         continue-on-error: true  # lint is advisory until we enforce it
 
-  manifest-schema:
-    name: Validate example manifests
+  registry-smoke:
+    name: Verify live registry manifests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
@@ -77,6 +77,14 @@ jobs:
           go-version-file: go.mod
           cache: true
 
-      - name: Validate examples/web-search/SKILL.json
+      - name: Verify every published skill manifest
         run: |
-          go run ./cmd/nullapt verify examples/web-search/SKILL.json
+          set -euo pipefail
+          curl -fsSL https://registry.nullapt.dev/v1/skills \
+            | jq -r '.[] | .name' \
+            | while read -r name; do
+                echo "::group::verify $name"
+                curl -fsSL "https://registry.nullapt.dev/v1/skills/$name/manifest" > /tmp/SKILL.json
+                go run ./cmd/nullapt verify /tmp/SKILL.json
+                echo "::endgroup::"
+              done
