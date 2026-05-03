@@ -1,0 +1,10 @@
+.git
+.github
+.claude
+node_modules
+web
+examples
+*.md
+coverage.out
+nullapt
+registry-api

@@ -4,8 +4,12 @@ interface Props {
   releases: GitHubRelease[];
 }
 
+function isBinary(name: string) {
+  return name.endsWith(".tar.gz") || name.endsWith(".zip");
+}
+
 function totalDownloads(release: GitHubRelease) {
-  return release.assets.reduce((s, a) => s + a.download_count, 0);
+  return release.assets.reduce((s, a) => (isBinary(a.name) ? s + a.download_count : s), 0);
 }
 
 // Platform label from asset filename: nullapt_0.1.0_darwin_arm64.tar.gz → darwin arm64
@@ -31,7 +35,7 @@ export function DownloadChart({ releases }: Props) {
   const latest = published[0];
   const platformData = latest
     ? latest.assets
-        .filter((a) => a.name.endsWith(".tar.gz") || a.name.endsWith(".zip"))
+        .filter((a) => isBinary(a.name))
         .map((a) => ({ label: platformLabel(a.name), count: a.download_count }))
         .sort((a, b) => b.count - a.count)
     : [];
