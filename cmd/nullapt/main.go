@@ -11,6 +11,9 @@ import (
 var version = "0.1.0-dev"
 
 func main() {
+	// Kick off the update check in background before running the command.
+	updateCh := commands.CheckForUpdate(version)
+
 	root := &cobra.Command{
 		Use:   "nullapt",
 		Short: "The private-first package manager for AI skills",
@@ -41,7 +44,15 @@ Get started:
 		commands.NewLogoutCmd(),
 	)
 
-	if err := root.Execute(); err != nil {
+	err := root.Execute()
+
+	// Print update notice after the command, if a newer version was found.
+	if latest, ok := <-updateCh; ok && latest != "" {
+		fmt.Fprintf(os.Stderr, "\n   update available  %s → %s\n", version, latest)
+		fmt.Fprintf(os.Stderr, "   brew upgrade nullapt  or  curl -fsSL https://nullapt.dev/install.sh | sh\n\n")
+	}
+
+	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
 	}
