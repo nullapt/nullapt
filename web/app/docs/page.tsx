@@ -1,15 +1,80 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import Integrations from "./Integrations";
+import { safeJsonLd } from "@/lib/jsonld";
 
 export const metadata: Metadata = {
-  title: "Docs — NullApt",
-  description: "NullApt documentation — install the CLI, build and publish skills, command reference.",
+  title: "Install & Build MCP Skills — NullApt Docs",
+  description:
+    "Install the NullApt CLI, build your first WASM skill, and publish to the signed MCP registry. Full command reference, integration guides for Claude Desktop, Cursor, LM Studio, and Ollama.",
   alternates: { canonical: "https://nullapt.dev/docs" },
   openGraph: {
-    title: "Docs — NullApt",
-    description: "Install, build, and publish AI skills with NullApt.",
+    title: "Install & Build MCP Skills — NullApt Docs",
+    description:
+      "Install, build, sign, and publish MCP skills with NullApt. Works with Claude Desktop, Cursor, LM Studio, and Ollama.",
     url: "https://nullapt.dev/docs",
   },
+};
+
+const FAQ_JSONLD = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: [
+    {
+      "@type": "Question",
+      name: "What is a SKILL.json manifest?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text:
+          "A SKILL.json is the signed manifest that ships with every NullApt skill. It declares the skill's name, version, author, license, and the exact permissions the WASM sandbox is allowed to grant — network domains, filesystem paths, and environment variables. The manifest is Ed25519 signed; the signature and public key are recorded in NullApt's transparency log so any future change is publicly auditable.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "Is NullApt open source?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text:
+          "Yes. NullApt is MIT-licensed and developed in the open at github.com/nullapt/nullapt. The CLI, registry API, and WASM runtime are all open source. The public registry at registry.nullapt.dev is free; private hosted registries are available for teams that need to keep skills internal.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "Does NullApt work offline?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text:
+          "Yes. Once a skill is installed it runs entirely on your machine — there is no required cloud dependency at runtime. The CLI only contacts a registry to install or publish a skill, and you can point --registry at a self-hosted instance or skip network access entirely after installation.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "How do I self-host NullApt?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text:
+          "The registry API is a single Go binary. Clone github.com/nullapt/nullapt, configure DATABASE_URL and BLOB_READ_WRITE_TOKEN in a .env file, apply the schema with psql, and run go run ./cmd/registry-api. Point any client at it with `nullapt get <skill> --registry https://my-registry.internal`.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "How does NullApt secure MCP skills?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text:
+          "Every published skill is Ed25519 signed and recorded in a transparency log, then runs inside a WASM-WASI sandbox at install time. The sandbox physically enforces the permissions declared in SKILL.json — a skill that did not declare network access cannot reach the network, regardless of what the WASM module attempts.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "Which MCP clients does NullApt work with?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text:
+          "NullApt works with any MCP host. Register `nullapt mcp` once as a stdio MCP server in Claude Desktop, Cursor, LM Studio, Ollama, AnythingLLM, Continue.dev, or any other MCP-compatible client, and every installed skill is exposed as a tool. Newly installed skills become available without restarting the host.",
+      },
+    },
+  ],
 };
 
 function Section({ id, title, children }: { id: string; title: string; children: React.ReactNode }) {
@@ -77,6 +142,10 @@ const TOC = [
 export default function DocsPage() {
   return (
     <div className="max-w-5xl mx-auto px-6 py-12 flex gap-12">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(FAQ_JSONLD) }}
+      />
       {/* Sidebar TOC */}
       <aside className="hidden lg:block w-48 shrink-0">
         <div className="sticky top-20">
@@ -99,11 +168,13 @@ export default function DocsPage() {
       {/* Main content */}
       <div className="flex-1 min-w-0">
         <div className="text-xs mb-3" style={{ color: "var(--muted)" }}>
-          <a href="/" className="hover:text-white transition-colors">~/nullapt</a>
+          <Link href="/" className="hover:text-white transition-colors">~/nullapt</Link>
           <span className="mx-2">/</span>
           <span style={{ color: "var(--accent)" }}>docs</span>
         </div>
-        <h1 className="text-2xl font-bold mb-8">Documentation</h1>
+        <h1 className="text-2xl font-bold mb-8">
+          NullApt Documentation — Install &amp; Publish MCP Skills
+        </h1>
 
         {/* Installation */}
         <Section id="installation" title="INSTALLATION">

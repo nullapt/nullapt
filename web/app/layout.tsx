@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
+import Link from "next/link";
 import "./globals.css";
 import { safeJsonLd } from "@/lib/jsonld";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -8,29 +9,33 @@ import { Analytics } from "@vercel/analytics/next";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://nullapt.dev";
 const SITE_NAME = "NullApt";
+const SITE_TITLE = "AI Skills Package Manager for MCP — NullApt";
 const SITE_DESCRIPTION =
-  "The private-first package manager for AI skills. Cryptographically signed, WASM sandboxed, and offline first.";
+  "NullApt is the package manager for MCP and AI skills. Every skill is cryptographically signed, WASM sandboxed, and offline-first. Works with Claude, Cursor, Ollama, and LM Studio.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: `${SITE_NAME} — Private-First AI Skill Registry`,
+    default: SITE_TITLE,
     template: `%s · ${SITE_NAME}`,
   },
   description: SITE_DESCRIPTION,
   keywords: [
-    "AI skills",
-    "MCP",
-    "Model Context Protocol",
-    "local LLM",
-    "package manager",
-    "WASM sandbox",
-    "Ed25519",
-    "offline AI",
-    "LM Studio",
-    "AnythingLLM",
+    "MCP package manager",
+    "MCP server manager",
+    "AI skills package manager",
+    "secure MCP server installation",
+    "MCP supply chain security",
+    "signed MCP tools",
+    "Claude Desktop tools",
+    "Cursor MCP skills",
+    "LM Studio skills",
     "Ollama tools",
-    "privacy AI",
+    "AI tool installation",
+    "MCP security",
+    "WASM AI sandbox",
+    "trusted MCP servers",
+    "private AI skill registry",
     "nullapt",
   ],
   authors: [{ name: "NullApt Contributors", url: "https://github.com/nullapt/nullapt" }],
@@ -46,13 +51,13 @@ export const metadata: Metadata = {
     locale: "en_US",
     url: SITE_URL,
     siteName: SITE_NAME,
-    title: `${SITE_NAME} — Private-First AI Skill Registry`,
+    title: SITE_TITLE,
     description: SITE_DESCRIPTION,
     // /opengraph-image is served by app/opengraph-image.tsx automatically
   },
   twitter: {
     card: "summary_large_image",
-    title: `${SITE_NAME} — Private-First AI Skill Registry`,
+    title: SITE_TITLE,
     description: SITE_DESCRIPTION,
     // twitter image auto-resolved from /opengraph-image
     creator: "@nullapt",
@@ -116,13 +121,13 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           className="sticky top-0 z-50"
         >
           <div className="max-w-6xl mx-auto px-6 h-12 flex items-center justify-between">
-            <a href="/" style={{ color: "var(--accent)" }} className="font-bold text-base tracking-tight">
+            <Link href="/" style={{ color: "var(--accent)" }} className="font-bold text-base tracking-tight">
               <span style={{ color: "var(--muted)" }}>~/</span>nullapt
-            </a>
+            </Link>
             <nav className="flex items-center gap-6 text-sm" style={{ color: "var(--muted)" }}>
-              <a href="/skills" className="hover:text-white transition-colors">browse</a>
-              <a href="/releases" className="hover:text-white transition-colors">releases</a>
-              <a href="/docs" className="hover:text-white transition-colors">docs</a>
+              <Link href="/skills" className="hover:text-white transition-colors">browse</Link>
+              <Link href="/releases" className="hover:text-white transition-colors">releases</Link>
+              <Link href="/docs" className="hover:text-white transition-colors">docs</Link>
               <a
                 href="https://github.com/nullapt/nullapt"
                 target="_blank"
@@ -145,21 +150,31 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           style={{ borderTop: "1px solid var(--border)", color: "var(--muted)" }}
           className="text-xs py-6"
         >
-          <div className="max-w-6xl mx-auto px-6 flex justify-between">
+          <div className="max-w-6xl mx-auto px-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <span>
-              <span style={{ color: "var(--accent)" }}>~/</span>nullapt — zero-knowledge AI skill registry
+              <span style={{ color: "var(--accent)" }}>~/</span>nullapt — secure package manager for MCP skills
             </span>
-            <span>
+            <nav className="flex flex-wrap items-center gap-x-4 gap-y-2">
+              <Link href="/skills" className="hover:text-white transition-colors">
+                browse skills
+              </Link>
+              <Link href="/docs" className="hover:text-white transition-colors">
+                docs
+              </Link>
+              <Link href="/releases" className="hover:text-white transition-colors">
+                releases
+              </Link>
               <a
                 href="https://github.com/nullapt/nullapt"
                 className="hover:text-white transition-colors"
                 target="_blank"
                 rel="noreferrer"
               >
-                open source
+                github
               </a>
-              {" · "}offline first · Ed25519 signed
-            </span>
+              <span aria-hidden="true">·</span>
+              <span>offline first · Ed25519 signed</span>
+            </nav>
           </div>
         </footer>
         <Analytics />
