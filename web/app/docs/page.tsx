@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Integrations from "./Integrations";
 
 export const metadata: Metadata = {
   title: "Docs — NullApt",
@@ -66,6 +67,7 @@ function Cmd({ name, desc }: { name: string; desc: string }) {
 const TOC = [
   ["installation", "Installation"],
   ["quick-start", "Quick Start"],
+  ["integrations", "Use in your client"],
   ["commands", "Command Reference"],
   ["building", "Building a Skill"],
   ["signing", "Signing & Publishing"],
@@ -147,9 +149,22 @@ $ nullapt list
 $ nullapt remove nullapt/prompt-optimizer`}</Code>
           <p style={{ color: "var(--muted)" }} className="text-sm">
             Skills install to <code style={{ color: "var(--accent)" }}>~/.nullapt/skills/</code>.
-            Any MCP-compliant client (LM Studio, AnythingLLM, Ollama) pointed at that directory
-            picks them up automatically — no restart required.
+            Once you register{" "}
+            <code style={{ color: "var(--accent)" }}>nullapt mcp</code> as an MCP server in your
+            client (see <a href="#integrations" style={{ color: "var(--accent)" }} className="hover:underline">Use in your client</a>),
+            every installed skill is exposed as a tool — newly installed skills appear without
+            restarting the host.
           </p>
+
+          <p style={{ color: "var(--muted)" }} className="text-sm mt-4">
+            Or invoke a tool directly from the shell:
+          </p>
+          <Code>{`$ nullapt run nullapt/web-search web_search --input '{"query":"linux kernel"}'`}</Code>
+        </Section>
+
+        {/* Integrations */}
+        <Section id="integrations" title="USE IN YOUR CLIENT">
+          <Integrations />
         </Section>
 
         {/* Commands */}
@@ -161,7 +176,11 @@ $ nullapt remove nullapt/prompt-optimizer`}</Code>
             <Cmd name="nullapt get <skill[@ver]>" desc="Install a skill from the registry. Alias: i, install" />
             <Cmd name="nullapt remove <skill>" desc="Uninstall a skill" />
             <Cmd name="nullapt list" desc="List installed skills" />
+            <Cmd name="nullapt run <skill> <tool>" desc="Invoke a tool from the shell. Reads JSON from --input/--input-file/stdin" />
+            <Cmd name="nullapt mcp" desc="Stdio MCP server exposing every installed skill — register in your client config" />
             <Cmd name="nullapt verify <SKILL.json>" desc="Verify a manifest's Ed25519 signature" />
+            <Cmd name="nullapt keygen" desc="Generate an Ed25519 signing keypair" />
+            <Cmd name="nullapt sign <SKILL.json>" desc="Sign a manifest in place with your private key" />
             <Cmd name="nullapt publish <SKILL.json>" desc="Publish a skill (requires login)" />
             <Cmd name="nullapt login" desc="Authenticate with the registry" />
             <Cmd name="nullapt logout" desc="Remove stored credentials" />
